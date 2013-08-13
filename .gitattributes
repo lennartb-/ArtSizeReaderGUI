@@ -1,5 +1,10 @@
 * text=auto !eol
+/ArtSizeReader.sln -text
+/ArtSizeReader.v11.suo -text
+ArtSizeReader/App.config -text
 ArtSizeReader/ArtReader.cs -text
+ArtSizeReader/ArtSizeReader.csproj -text
+ArtSizeReader/ArtSizeReader.csproj.user -text
 ArtSizeReader/Options.cs -text
 ArtSizeReader/Program.cs -text
 ArtSizeReader/lib/UltraID3Lib.dll -text
