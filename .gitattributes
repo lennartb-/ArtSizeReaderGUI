@@ -1,0 +1,17 @@
+* text=auto !eol
+ArtSizeReader/ArtReader.cs -text
+ArtSizeReader/Options.cs -text
+ArtSizeReader/Program.cs -text
+ArtSizeReader/lib/UltraID3Lib.dll -text
+ArtSizeReader/lib/UltraID3Lib.xml -text
+ArtSizeReader/packages.config -text
+packages/CommandLineParser.1.9.71/CommandLineParser.1.9.71.nupkg -text
+packages/CommandLineParser.1.9.71/CommandLineParser.1.9.71.nuspec -text
+packages/CommandLineParser.1.9.71/lib/net35/CommandLine.dll -text
+packages/CommandLineParser.1.9.71/lib/net35/CommandLine.xml -text
+packages/CommandLineParser.1.9.71/lib/net40/CommandLine.dll -text
+packages/CommandLineParser.1.9.71/lib/net40/CommandLine.xml -text
+packages/CommandLineParser.1.9.71/lib/net45/CommandLine.dll -text
+packages/CommandLineParser.1.9.71/lib/net45/CommandLine.xml -text
+packages/CommandLineParser.1.9.71/readme.txt -text
+packages/repositories.config -text
