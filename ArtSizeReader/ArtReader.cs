@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -12,8 +13,8 @@ namespace ArtSizeReader {
         private uint[] resolution;
         private string threshold;
 
-        bool hasLog = false;
-        bool hasThreshold = false;
+        private bool hasLog = false;
+        private bool hasThreshold = false;
 
         public IArtReader toRead(string toRead) {
             this.target = toRead;
@@ -57,7 +58,6 @@ namespace ArtSizeReader {
 
             }
 
-
             return reader;
 
         }
@@ -76,23 +76,63 @@ namespace ArtSizeReader {
         }
 
         public void getAlbumArt() {
+
+            // Target is a single file
+            if (File.Exists(target)) {
+                analyzeFile(target);
+            }
+
+            // Target is a directory
+            else if (Directory.Exists(target)) {
+                foreach (string file in readFiles(target)) {
+                    analyzeFile(file);
+                }
+
+            }
+
+        }
+
+        private IEnumerable<string> readFiles(string directory) {
+            IEnumerable<string> musicFiles;
+            int numOfFiles;
             try {
-                UltraID3 tags = new UltraID3();
-                tags.Read(target);
+                musicFiles = Directory.EnumerateFiles(directory, "*.mp3", SearchOption.AllDirectories);
+                numOfFiles = musicFiles.Count();
+            }
+            catch (UnauthorizedAccessException uae) {
+                Console.WriteLine(uae.Message);
+                yield break;
+            }
+            catch (PathTooLongException ptle) {
+                Console.WriteLine(ptle.Message);
+                yield break;
+            }
+            int i = 0;
+            foreach (string currentFile in musicFiles) {
+                Console.Write("\r{0} of {1} ({2}%) finished.", i++, numOfFiles, ((float)i / (float)numOfFiles) * 100);
+                yield return currentFile;
+            }
+
+
+        }
+
+        private void analyzeFile(string file) {
+            UltraID3 tags = new UltraID3();
+            try {
+
+                tags.Read(file);
                 ID3FrameCollection covers = tags.ID3v2Tag.Frames.GetFrames(CommonMultipleInstanceID3v2FrameTypes.Picture);
                 ID3v2PictureFrame cover = (ID3v2PictureFrame)covers[0];
                 Bitmap image = new Bitmap((Image)cover.Picture);
 
-                if (hasThreshold && checkSize(image)) {
-                    Console.WriteLine("Checked Artwork size is: " + image.Size.Width + "x" + image.Size.Height);
+                if (hasThreshold && !checkSize(image)) {
+                    Console.WriteLine("Checked Artwork size for file " + file + " is below limit: " + image.Size.Width + "x" + image.Size.Height);
                 }
-                Console.WriteLine("Artwork size is: " + image.Size.Width + "x" + image.Size.Height);
+                //Console.WriteLine("Artwork size is: " + image.Size.Width + "x" + image.Size.Height);
 
             }
             catch (Exception e) {
-                var a = e.ToString();
-                Console.WriteLine("Error reading file or no cover: " + target);
-                Console.WriteLine(e.Message);
+                Console.WriteLine("No cover found for: " + file);
             }
         }
 

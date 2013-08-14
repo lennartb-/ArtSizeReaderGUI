@@ -30,32 +30,13 @@ namespace ArtSizeReader {
                 if (options.Logfile != null) {
                     ar.withLogfile(options.Logfile);
                 }
-                ar.create().getAlbumArt();
+                ar.create().getAlbumArt();               
                 
-                if (options.Verbose) Console.WriteLine("Filename: {0}", options.InputFile);
                 Console.ReadLine();
             }
         }
 
-        private static IEnumerable<string> readFiles(string directory) {
-            IEnumerable<string> musicFiles;
-            try {
-                musicFiles = Directory.EnumerateFiles(directory, "*.mp3", SearchOption.AllDirectories);
-            }
-            catch (UnauthorizedAccessException uae) {
-                Console.WriteLine(uae.Message);
-                yield break;
-            }
-            catch (PathTooLongException ptle) {
-                Console.WriteLine(ptle.Message);
-                yield break;
-            }
-
-            foreach (string currentFile in musicFiles) {
-                Console.WriteLine("File: " + currentFile);
-                yield return currentFile;
-            }
-        }
+        
 
 
     }
