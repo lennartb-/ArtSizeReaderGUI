@@ -17,20 +17,18 @@ namespace ArtSizeReader {
                 ArtReader ar = new ArtReader();
                 // Check if we either have a single file...
                 if (options.InputFile != null) {
-
                     ar.toRead(options.InputFile);
                 }
-
                 // Check if a resolution limit is set.
                 if (options.Threshold != null) {
                     ar.withThreshold(options.Threshold);
-
                 }
                 // Check if output will be logged to file.
                 if (options.Logfile != null) {
                     ar.withLogfile(options.Logfile);
                 }
-                ar.create().getAlbumArt();               
+                ar.create();
+                ar.getAlbumArt();               
                 
                 Console.ReadLine();
             }

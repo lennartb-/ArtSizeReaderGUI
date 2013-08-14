@@ -123,8 +123,7 @@ namespace ArtSizeReader {
                 tags.Read(file);
                 ID3FrameCollection covers = tags.ID3v2Tag.Frames.GetFrames(CommonMultipleInstanceID3v2FrameTypes.Picture);
                 ID3v2PictureFrame cover = (ID3v2PictureFrame)covers[0];
-                Bitmap image = new Bitmap((Image)cover.Picture);
-
+                Bitmap image = new Bitmap((Image)cover.Picture);                
                 if (hasThreshold && !checkSize(image)) {
                     Console.WriteLine("Checked Artwork size for file " + file + " is below limit: " + image.Size.Width + "x" + image.Size.Height);
                 }
