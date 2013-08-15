@@ -1,19 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
 using CommandLine;
 
 namespace ArtSizeReader {
     class Program {
-        private static bool loggingEnabled = false;
-        private static string loggingPath = String.Empty;
         static void Main(string[] args) {
 
+            // Translates Exceptions and other messages to english.
             System.Threading.Thread.CurrentThread.CurrentUICulture = new System.Globalization.CultureInfo("en-us");
             System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = new System.Globalization.CultureInfo("en-us");
 
+            // Get command line parser
             var options = new Options();
+
             if (Parser.Default.ParseArguments(args, options)) {
+
                 ArtReader ar = new ArtReader();
                 // Check if we either have a single file...
                 if (options.InputFile != null) {
@@ -27,14 +27,16 @@ namespace ArtSizeReader {
                 if (options.Logfile != null) {
                     ar.withLogfile(options.Logfile);
                 }
+                // Create object and start analyzing the files.
                 ar.create();
-                ar.getAlbumArt();               
-                
+                ar.getAlbumArt();
+
+                // Wait for user input/keep cmd window open.
                 Console.ReadLine();
             }
         }
 
-        
+
 
 
     }

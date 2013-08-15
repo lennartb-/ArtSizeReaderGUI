@@ -8,7 +8,7 @@ using HundredMilesSoftware.UltraID3Lib;
 namespace ArtSizeReader {
     public class ArtReader : IArtReader {
 
-        private string target;
+        private string targetPath;
         private string logfile;
         private uint[] resolution;
         private string threshold;
@@ -17,7 +17,7 @@ namespace ArtSizeReader {
         private bool hasThreshold = false;
 
         public IArtReader toRead(string toRead) {
-            this.target = toRead;
+            this.targetPath = toRead;
             return this;
         }
 
@@ -35,19 +35,18 @@ namespace ArtSizeReader {
         public ArtReader create() {
             ArtReader reader = new ArtReader();
             try {
-                reader.target = Path.GetFullPath(target);
+                reader.targetPath = Path.GetFullPath(targetPath);
             }
             catch (Exception e) {
                 Console.WriteLine("Could not find target path: " + e.Message);
-                Console.WriteLine("for path " + target);
+                Console.WriteLine("for path " + targetPath);
                 throw new ArgumentException();
             }
             if (logfile != null) {
-                createLogfile(logfile);
                 hasLog = true;
             }
             if (threshold != null) {
-                reader.resolution = resolution = parseResolution(threshold);
+                reader.resolution = resolution = parseResolution();
                 hasThreshold = true;
 
             }
@@ -62,9 +61,9 @@ namespace ArtSizeReader {
         /// <param name="toParse">The string to parse.</param>
         /// <returns>A uint[2] array containing the width in the first and height in the second field.</returns>
 
-        private uint[] parseResolution(string toParse) {
+        private uint[] parseResolution() {
             try {
-                return toParse.Split('x').Select(uint.Parse).ToArray();
+                return threshold.Split('x').Select(uint.Parse).ToArray();
             }
             catch (Exception e) {
                 // Resolution is < 0 or doesn't fit into the uint Array
@@ -82,13 +81,13 @@ namespace ArtSizeReader {
         public void getAlbumArt() {
 
             // Target is a single file
-            if (File.Exists(target)) {
-                analyzeFile(target);
+            if (File.Exists(targetPath)) {
+                analyzeFile(targetPath);
             }
 
             // Target is a directory
-            else if (Directory.Exists(target)) {
-                foreach (string file in readFiles(target)) {
+            else if (Directory.Exists(targetPath)) {
+                foreach (string file in readFiles(targetPath)) {
                     analyzeFile(file);
                 }
             }
@@ -143,13 +142,20 @@ namespace ArtSizeReader {
         private void analyzeFile(string file) {
             UltraID3 tags = new UltraID3();
             try {
-
+                String infoLine;
                 tags.Read(file);
                 ID3FrameCollection covers = tags.ID3v2Tag.Frames.GetFrames(CommonMultipleInstanceID3v2FrameTypes.Picture);
                 ID3v2PictureFrame cover = (ID3v2PictureFrame)covers[0];
                 Bitmap image = new Bitmap((Image)cover.Picture);
                 if (hasThreshold && !checkSize(image)) {
-                    Console.WriteLine("Checked Artwork size for file " + file + " is below limit: " + image.Size.Width + "x" + image.Size.Height);
+                    infoLine = "Checked Artwork size for file " + file + " is below limit: " + image.Size.Width + "x" + image.Size.Height;
+                    if (hasLog) {
+                        writeToLogFile(infoLine);
+                    }
+                    else {
+                        Console.WriteLine(infoLine);
+                    }
+
                 }
                 //Console.WriteLine("Artwork size is: " + image.Size.Width + "x" + image.Size.Height);
 
@@ -160,19 +166,18 @@ namespace ArtSizeReader {
         }
 
 
-        private bool createLogfile(string path) {
+        private bool writeToLogFile(string line) {
 
             try {
-                string checkedPath = Path.GetFullPath(path);
-                using (FileStream fileTest = System.IO.File.Open(checkedPath, FileMode.OpenOrCreate)) {
-
-                    fileTest.Close();
+                string checkedPath = Path.GetFullPath(logfile);
+                using (StreamWriter writer = new StreamWriter(logfile, true)) {
+                    writer.WriteLine(line);
                 }
                 return true;
             }
             catch (Exception e) {
                 Console.WriteLine("Could not create logfile: " + e.Message);
-                Console.WriteLine("for path " + path);
+                Console.WriteLine("for path " + logfile);
                 throw new ArgumentException();
             }
         }
