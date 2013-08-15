@@ -30,13 +30,7 @@ namespace ArtSizeReader {
             return this;
         }
 
-        private bool checkSize(Bitmap image) {
-            if (image.Size.Width < resolution[0] || image.Size.Height < resolution[1]) {
-                return false;
-            }
-            else return true;
 
-        }
 
         public ArtReader create() {
             ArtReader reader = new ArtReader();
@@ -62,6 +56,12 @@ namespace ArtSizeReader {
 
         }
 
+        /// <summary>
+        /// Parses the resolution from a WIDTHxHEIGHT string into an array.
+        /// </summary>
+        /// <param name="toParse">The string to parse.</param>
+        /// <returns>A uint[2] array containing the width in the first and height in the second field.</returns>
+
         private uint[] parseResolution(string toParse) {
             try {
                 return toParse.Split('x').Select(uint.Parse).ToArray();
@@ -75,6 +75,10 @@ namespace ArtSizeReader {
 
         }
 
+        /// <summary>
+        /// Starts fetching the album art from the specified file or directory.
+        /// </summary>
+
         public void getAlbumArt() {
 
             // Target is a single file
@@ -87,10 +91,14 @@ namespace ArtSizeReader {
                 foreach (string file in readFiles(target)) {
                     analyzeFile(file);
                 }
-
             }
-
         }
+
+        /// <summary>
+        /// Enumerates the files in a certain directory and returns one file at a time.
+        /// </summary>
+        /// <param name="directory"> The directory to check.</param>
+        /// <returns>An IEnumerable containing all found files.</returns>
 
         private IEnumerable<string> readFiles(string directory) {
             IEnumerable<string> musicFiles;
@@ -112,9 +120,25 @@ namespace ArtSizeReader {
                 Console.Write("\r{0} of {1} ({2}%) finished.", i++, numOfFiles, ((float)i / (float)numOfFiles) * 100);
                 yield return currentFile;
             }
-
-
         }
+
+        /// <summary>
+        /// Checks whether the size of an image is below the global threshold.
+        /// </summary>
+        /// <param name="image">The image to check.</param>
+        /// <returns>false if the image is below the limit, true if not.</returns>
+
+        private bool checkSize(Bitmap image) {
+            if (image.Size.Width < resolution[0] || image.Size.Height < resolution[1]) {
+                return false;
+            }
+            else return true;
+        }
+
+        /// <summary>
+        /// Analyzes a file for album art and handles checking of the size.
+        /// </summary>
+        /// <param name="file">The file to check.</param>
 
         private void analyzeFile(string file) {
             UltraID3 tags = new UltraID3();
@@ -123,7 +147,7 @@ namespace ArtSizeReader {
                 tags.Read(file);
                 ID3FrameCollection covers = tags.ID3v2Tag.Frames.GetFrames(CommonMultipleInstanceID3v2FrameTypes.Picture);
                 ID3v2PictureFrame cover = (ID3v2PictureFrame)covers[0];
-                Bitmap image = new Bitmap((Image)cover.Picture);                
+                Bitmap image = new Bitmap((Image)cover.Picture);
                 if (hasThreshold && !checkSize(image)) {
                     Console.WriteLine("Checked Artwork size for file " + file + " is below limit: " + image.Size.Width + "x" + image.Size.Height);
                 }
@@ -154,7 +178,9 @@ namespace ArtSizeReader {
         }
     }
 
-
+    /// <summary>
+    /// Exposes the ArtReader, which supports the analysis of a file or directory with various options.
+    /// </summary>
 
     public interface IArtReader {
         IArtReader toRead(string toRead);
