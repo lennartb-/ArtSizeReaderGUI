@@ -13,6 +13,10 @@ namespace ArtSizeReader {
         private uint[] resolution;
         private string threshold;
 
+        // Log to console per default        
+        private const StreamWriter defaultConsoleOutput = new StreamWriter(Console.OpenStandardOutput());
+        private StreamWriter logger = defaultConsoleOutput;
+
         private bool hasLog = false;
         private bool hasThreshold = false;
 
@@ -30,25 +34,27 @@ namespace ArtSizeReader {
             return this;
         }
 
-
-
         public ArtReader create() {
             ArtReader reader = new ArtReader();
+            if (logfile != null) {
+                Console.WriteLine("Logging enabled, writing log to: " + logfile);
+                logger = initialiseLogging();
+                Console.SetOut(logger);
+                hasLog = true;
+            }
             try {
                 reader.targetPath = Path.GetFullPath(targetPath);
             }
+
             catch (Exception e) {
                 Console.WriteLine("Could not find target path: " + e.Message);
                 Console.WriteLine("for path " + targetPath);
                 throw new ArgumentException();
             }
-            if (logfile != null) {
-                hasLog = true;
-            }
             if (threshold != null) {
-                reader.resolution = resolution = parseResolution();
+                reader.resolution = parseResolution();
                 hasThreshold = true;
-
+                Console.WriteLine("Threshold enabled, selected value: " + threshold);
             }
 
             return reader;
@@ -70,8 +76,6 @@ namespace ArtSizeReader {
                 Console.WriteLine("Can not parse Resolution, must be in format e.g.: 300x300");
                 throw new InvalidCastException();
             }
-
-
         }
 
         /// <summary>
@@ -115,8 +119,10 @@ namespace ArtSizeReader {
                 yield break;
             }
             int i = 0;
-            foreach (string currentFile in musicFiles) {
+            foreach (string currentFile in musicFiles) {               
+                Console.SetOut(defaultConsoleOutput);
                 Console.Write("\r{0} of {1} ({2}%) finished.", i++, numOfFiles, ((float)i / (float)numOfFiles) * 100);
+                Console.SetOut(logger);
                 yield return currentFile;
             }
         }
@@ -149,31 +155,35 @@ namespace ArtSizeReader {
                 Bitmap image = new Bitmap((Image)cover.Picture);
                 if (hasThreshold && !checkSize(image)) {
                     infoLine = "Checked Artwork size for file " + file + " is below limit: " + image.Size.Width + "x" + image.Size.Height;
-                    if (hasLog) {
-                        writeToLogFile(infoLine);
-                    }
-                    else {
-                        Console.WriteLine(infoLine);
-                    }
-
+                    Console.WriteLine(infoLine);
                 }
                 //Console.WriteLine("Artwork size is: " + image.Size.Width + "x" + image.Size.Height);
 
             }
             catch (Exception e) {
                 Console.WriteLine("No cover found for: " + file);
+                Console.WriteLine(e.Message);
             }
         }
 
 
-        private bool writeToLogFile(string line) {
+        private void writeToLogFile(string line) {
 
             try {
+                Console.WriteLine(line);
+            }
+            catch (Exception e) {
+                Console.WriteLine("Could not create logfile: " + e.Message);
+                Console.WriteLine("for path " + logfile);
+                throw new ArgumentException();
+            }
+        }
+
+        private StreamWriter initialiseLogging() {
+            try {
                 string checkedPath = Path.GetFullPath(logfile);
-                using (StreamWriter writer = new StreamWriter(logfile, true)) {
-                    writer.WriteLine(line);
-                }
-                return true;
+                StreamWriter writer = new StreamWriter(logfile, true);
+                return writer;
             }
             catch (Exception e) {
                 Console.WriteLine("Could not create logfile: " + e.Message);
@@ -182,6 +192,7 @@ namespace ArtSizeReader {
             }
         }
     }
+
 
     /// <summary>
     /// Exposes the ArtReader, which supports the analysis of a file or directory with various options.

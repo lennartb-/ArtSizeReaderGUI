@@ -28,8 +28,7 @@ namespace ArtSizeReader {
                     ar.withLogfile(options.Logfile);
                 }
                 // Create object and start analyzing the files.
-                ar.create();
-                ar.getAlbumArt();
+                ar.create().getAlbumArt();                
 
                 // Wait for user input/keep cmd window open.
                 Console.ReadLine();
