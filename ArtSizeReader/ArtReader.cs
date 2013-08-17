@@ -39,33 +39,42 @@ namespace ArtSizeReader {
         /// <returns>An ArtReader objects with the desired input parameters.</returns>
         public ArtReader Create() {
             ArtReader reader = new ArtReader();
-
-            // Set up logfile.
-            if (logfile != null) {
-                Console.WriteLine("Logging enabled, writing log to: " + logfile);
-                logger = InitialiseLogging();
-                Console.SetOut(logger);
-                hasLog = true;
-            }
-
-            // Check if target path is valid.
             try {
-                reader.targetPath = Path.GetFullPath(targetPath);
+                // Set up logfile.
+                if (logfile != null) {
+                    Console.WriteLine("Logging enabled, writing log to: " + logfile);
+                    logger = InitialiseLogging();
+                    Console.SetOut(logger);
+                    reader.logfile = logfile;
+                    hasLog = true;
+                }
+
+                // Check if target path is valid.
+                reader.targetPath = targetPath;
+                validatePath(reader.targetPath);
+
+                // Check and Parse resolution.
+                if (this.threshold != null) {
+                    reader.resolution = ParseResolution();
+                    hasThreshold = true;
+                    Console.WriteLine("Threshold enabled, selected value: " + threshold);
+                }
+            }
+            catch (Exception e) {
+                throw new ArgumentException("One or more parameters are invalid: " + e.Message);
+            }
+            return reader;
+        }
+
+        private void validatePath(string targetPath) {
+            try {
+                targetPath = Path.GetFullPath(targetPath);
             }
             catch (Exception e) {
                 Console.WriteLine("Could not find target path: " + e.Message);
                 Console.WriteLine("for path " + targetPath);
-                throw new ArgumentException();
+                throw new ArgumentException("Invalid target path");
             }
-
-            // Check and Parse resolution.
-            if (threshold != null) {
-                reader.resolution = ParseResolution();
-                hasThreshold = true;
-                Console.WriteLine("Threshold enabled, selected value: " + threshold);
-            }
-
-            return reader;
         }
 
         /// <summary>
@@ -132,7 +141,6 @@ namespace ArtSizeReader {
             }
             catch (Exception e) {
                 Console.WriteLine("No cover found for: " + file);
-                Console.WriteLine(e.Message);
             }
         }
 
@@ -175,8 +183,8 @@ namespace ArtSizeReader {
             }
             catch (Exception e) {
                 // Resolution is < 0 or doesn't fit into the uint Array
-                Console.WriteLine("Can not parse Resolution, must be in format e.g.: 300x300");
-                throw new InvalidCastException();
+                Console.Error.WriteLine("Can not parse resolution, must be in format e.g.: 300x300");
+                throw new ArgumentException("Invalid resolution string");
             }
         }
 
@@ -208,11 +216,12 @@ namespace ArtSizeReader {
                 // If logging to file is enabled, print out the progress to console anyway.
                 if (hasLog) {
                     Console.SetOut(defaultConsoleOutput);
-                    Console.Write("\r{0} of {1} ({2}%) finished.", i++, numOfFiles, ((float)i / (float)numOfFiles) * 100);
+                    Console.Write("\r{0} of {1} ({2}%) finished.", ++i, numOfFiles, ((float)i / (float)numOfFiles) * 100);
                     Console.SetOut(logger);
                 }
                 else {
-                    Console.Write("\r{0} of {1} ({2}%) finished.", i++, numOfFiles, ((float)i / (float)numOfFiles) * 100);
+                    Console.Clear();
+                    Console.Write("\r{0} of {1} ({2}%) finished.", ++i, numOfFiles, ((float)i / (float)numOfFiles) * 100);
                 }
                 yield return currentFile;
             }
@@ -229,7 +238,7 @@ namespace ArtSizeReader {
             catch (Exception e) {
                 Console.WriteLine("Could not create logfile: " + e.Message);
                 Console.WriteLine("for path " + logfile);
-                throw new ArgumentException();
+                throw new ArgumentException("Unable to create logfile");
             }
         }
     }

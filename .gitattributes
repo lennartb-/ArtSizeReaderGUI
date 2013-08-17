@@ -6,7 +6,6 @@ ArtSizeReader/ArtReader.cs -text
 ArtSizeReader/ArtSizeReader.csproj -text
 ArtSizeReader/ArtSizeReader.csproj.user -text
 ArtSizeReader/Options.cs -text
-ArtSizeReader/Program.cs -text
 ArtSizeReader/Properties/AssemblyInfo.cs -text
 ArtSizeReader/Settings.StyleCop -text
 ArtSizeReader/StyleCop.Cache -text
