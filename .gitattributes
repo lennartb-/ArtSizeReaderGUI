@@ -13,6 +13,9 @@ ArtSizeReader/StyleCop.Cache -text
 ArtSizeReader/lib/UltraID3Lib.dll -text
 ArtSizeReader/lib/UltraID3Lib.xml -text
 ArtSizeReader/packages.config -text
+ArtSizeReader_Testing/ArtSizeReader_Testing.csproj -text
+ArtSizeReader_Testing/Properties/AssemblyInfo.cs -text
+ArtSizeReader_Testing/UnitTest1.cs -text
 packages/CommandLineParser.1.9.71/CommandLineParser.1.9.71.nupkg -text
 packages/CommandLineParser.1.9.71/CommandLineParser.1.9.71.nuspec -text
 packages/CommandLineParser.1.9.71/lib/net35/CommandLine.dll -text

@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArtSizeReader", "ArtSizeReader\ArtSizeReader.csproj", "{7EFD3651-D74F-40EA-B714-90D9564193BD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArtSizeReader_Testing", "ArtSizeReader_Testing\ArtSizeReader_Testing.csproj", "{E89951C6-775F-46FF-9EB0-505D3C5AA39D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -13,6 +15,10 @@ Global
 		{7EFD3651-D74F-40EA-B714-90D9564193BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7EFD3651-D74F-40EA-B714-90D9564193BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7EFD3651-D74F-40EA-B714-90D9564193BD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E89951C6-775F-46FF-9EB0-505D3C5AA39D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E89951C6-775F-46FF-9EB0-505D3C5AA39D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E89951C6-775F-46FF-9EB0-505D3C5AA39D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E89951C6-775F-46FF-9EB0-505D3C5AA39D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

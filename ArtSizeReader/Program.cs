@@ -20,7 +20,7 @@ namespace ArtSizeReader {
 
                 // Check if we either have a single file...
                 if (options.InputFile != null) {
-                    ar.ToRead(options.InputFile);
+                    ar.ToRead(options.InputFile);                    
                 }
 
                 // Check if a resolution limit is set.
@@ -38,7 +38,7 @@ namespace ArtSizeReader {
                     ar.Create().GetAlbumArt();
                 }
                 catch (ArgumentException ae) {
-                    Console.WriteLine("Error: "+ae.Message);
+                    Console.WriteLine("Error: " + ae.Message);
                 }
 
                 // Wait for user input/keep cmd window open.
@@ -46,7 +46,7 @@ namespace ArtSizeReader {
             }
         }
 
-        static void UnhandledExceptionTrapper(object sender, UnhandledExceptionEventArgs e) {
+        private static void UnhandledExceptionTrapper(object sender, UnhandledExceptionEventArgs e) {
             Console.WriteLine(e.ExceptionObject.ToString());
             Console.WriteLine("Can not continue, press any key to quit.");
             Console.ReadLine();

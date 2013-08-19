@@ -8,7 +8,7 @@ using HundredMilesSoftware.UltraID3Lib;
 namespace ArtSizeReader {
 
     /// <summary>
-    /// Exposes the ArtReader, which supports the analysis of a file or directory with various options.
+    /// Exposes the fluent inteface for ArtReader, which supports the analysis of a file or directory with various options.
     /// </summary>
     public interface IArtReader {
         ArtReader Create();
@@ -50,8 +50,8 @@ namespace ArtSizeReader {
                 }
 
                 // Check if target path is valid.
+                ValidatePath(targetPath);
                 reader.targetPath = targetPath;
-                validatePath(reader.targetPath);
 
                 // Check and Parse resolution.
                 if (this.threshold != null) {
@@ -64,17 +64,6 @@ namespace ArtSizeReader {
                 throw new ArgumentException("One or more parameters are invalid: " + e.Message);
             }
             return reader;
-        }
-
-        private void validatePath(string targetPath) {
-            try {
-                targetPath = Path.GetFullPath(targetPath);
-            }
-            catch (Exception e) {
-                Console.WriteLine("Could not find target path: " + e.Message);
-                Console.WriteLine("for path " + targetPath);
-                throw new ArgumentException("Invalid target path");
-            }
         }
 
         /// <summary>
@@ -98,7 +87,7 @@ namespace ArtSizeReader {
         /// Specifies the file or path that will be analysed.
         /// </summary>
         /// <param name="toRead">The file or path to analyse.</param>
-        /// <returns></returns>
+        /// <returns>The instance of the current object.</returns>
         public IArtReader ToRead(string toRead) {
             this.targetPath = toRead;
             return this;
@@ -107,23 +96,24 @@ namespace ArtSizeReader {
         /// <summary>
         /// Specifies the filename and path of the logfile.
         /// </summary>
-        /// <param name="logfile">The path and filename of the logfile</param>
-        /// <returns></returns>
+        /// <param name="logfile">The path and filename of the logfile.</param>
+        /// <returns>The instance of the current object.</returns>
         public IArtReader WithLogfile(string logfile) {
             this.logfile = logfile;
             return this;
         }
 
         /// <summary>
-        ///
+        /// Specifies the art size threshold in the format WIDHTxHEIGHT.
         /// </summary>
-        /// <param name="threshold"></param>
-        /// <returns></returns>
+        /// <param name="threshold">The threshold.</param>
+        /// <returns>The instance of the current object.</returns>
         public IArtReader WithThreshold(string threshold) {
             this.threshold = threshold;
             return this;
         }
 
+        #region Private Methods
         /// <summary>
         /// Analyzes a file for album art and handles checking of the size.
         /// </summary>
@@ -228,6 +218,21 @@ namespace ArtSizeReader {
         }
 
         /// <summary>
+        /// Checks if the given path is a valid Windows path.
+        /// </summary>
+        /// <param name="targetPath">The path to check.</param>
+        private void ValidatePath(string targetPath) {
+            try {
+                targetPath = Path.GetFullPath(targetPath);
+            }
+            catch (Exception e) {
+                Console.WriteLine("Could not find target path: " + e.Message);
+                Console.WriteLine("for path " + targetPath);
+                throw new ArgumentException("Invalid target path");
+            }
+        }
+
+        /// <summary>
         /// Writes a line to into the logfile.
         /// </summary>
         /// <param name="line">The line to write.</param>
@@ -241,5 +246,6 @@ namespace ArtSizeReader {
                 throw new ArgumentException("Unable to create logfile");
             }
         }
+        #endregion
     }
 }
