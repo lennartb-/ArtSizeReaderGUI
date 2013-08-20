@@ -37,6 +37,7 @@ namespace ArtSizeReader {
         /// Builds an ArtReader object from the specified parameters and checks if they are valid.
         /// </summary>
         /// <returns>An ArtReader objects with the desired input parameters.</returns>
+        /// <exception cref="ArgumentException">Thrown when any of the supplied arguments are invalid.</exception>
         public ArtReader Create() {
             ArtReader reader = new ArtReader();
 
