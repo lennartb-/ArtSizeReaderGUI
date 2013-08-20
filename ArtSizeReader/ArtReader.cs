@@ -39,6 +39,7 @@ namespace ArtSizeReader {
         /// <returns>An ArtReader objects with the desired input parameters.</returns>
         public ArtReader Create() {
             ArtReader reader = new ArtReader();
+
             // Set up logfile.
             if (logfile != null && InitialiseLogging()) {
                 Console.WriteLine("Logging enabled, writing log to: " + logfile);
@@ -144,7 +145,7 @@ namespace ArtSizeReader {
         /// <summary>
         /// Manages the initialisation of the logfile.
         /// </summary>
-        /// <returns>A StreamWriter targeting the path of the logfile.</returns>
+        /// <returns>true if the path is valid, false when not.</returns>
         private bool InitialiseLogging() {
             try {
                 if (Directory.Exists(Path.GetDirectoryName(logfile))) {
@@ -166,7 +167,7 @@ namespace ArtSizeReader {
         /// <summary>
         /// Parses the resolution from a WIDTHxHEIGHT string into an array.
         /// </summary>
-        /// <returns>A uint[2] array containing the width in the first and height in the second field.</returns>
+        /// <returns>true if the resolution is valid, false when not.</returns>
         private bool ParseResolution() {
             try {
                 resolution = threshold.Split('x').Select(uint.Parse).ToArray();
@@ -224,6 +225,7 @@ namespace ArtSizeReader {
         /// Checks if the given path is a valid Windows path.
         /// </summary>
         /// <param name="targetPath">The path to check.</param>
+        /// <returns>true if the path is valid, false when not.</returns>
         private bool IsPathValid(string targetPath) {
             if (!Directory.Exists(targetPath) && !File.Exists(targetPath)) {
                 Console.WriteLine("Could not find target path: " + targetPath);
