@@ -39,30 +39,25 @@ namespace ArtSizeReader {
         /// <returns>An ArtReader objects with the desired input parameters.</returns>
         public ArtReader Create() {
             ArtReader reader = new ArtReader();
-            try {
-                // Set up logfile.
-                if (logfile != null) {
-                    Console.WriteLine("Logging enabled, writing log to: " + logfile);
-                    logger = InitialiseLogging();
-                    Console.SetOut(logger);
-                    reader.logfile = logfile;
-                    hasLog = true;
-                }
+            // Set up logfile.
+            if (logfile != null && InitialiseLogging()) {
+                Console.WriteLine("Logging enabled, writing log to: " + logfile);
+                reader.logfile = logfile;
+            }
+            else throw new ArgumentException("Invalid logfile path");
 
-                // Check if target path is valid.
-                ValidatePath(targetPath);
+            // Check if target path is valid.
+            if (IsPathValid(targetPath)) {
                 reader.targetPath = targetPath;
+            }
+            else throw new ArgumentException("Invalid target path.");
 
-                // Check and Parse resolution.
-                if (this.threshold != null) {
-                    reader.resolution = ParseResolution();
-                    hasThreshold = true;
-                    Console.WriteLine("Threshold enabled, selected value: " + threshold);
-                }
+            // Check and Parse resolution.
+            if (this.threshold != null && ParseResolution()) {
+                Console.WriteLine("Threshold enabled, selected value: " + resolution[0] + "x" + resolution[1]);
             }
-            catch (Exception e) {
-                throw new ArgumentException("One or more parameters are invalid: " + e.Message);
-            }
+            else throw new ArgumentException("Invalid resolution.");
+
             return reader;
         }
 
@@ -150,16 +145,21 @@ namespace ArtSizeReader {
         /// Manages the initialisation of the logfile.
         /// </summary>
         /// <returns>A StreamWriter targeting the path of the logfile.</returns>
-        private StreamWriter InitialiseLogging() {
+        private bool InitialiseLogging() {
             try {
-                string checkedPath = Path.GetFullPath(logfile);
-                StreamWriter writer = new StreamWriter(logfile, true);
-                return writer;
+                if (Directory.Exists(Path.GetDirectoryName(logfile))) {
+                    string checkedPath = Path.GetFullPath(logfile);
+                    logger = new StreamWriter(logfile, true);
+                    Console.SetOut(logger);
+                    hasLog = true;
+                    return true;
+                }
+                else return false;
             }
             catch (Exception e) {
                 Console.WriteLine("Could not create logfile: " + e.Message);
                 Console.WriteLine("for path " + logfile);
-                throw new ArgumentException();
+                return false;
             }
         }
 
@@ -167,14 +167,16 @@ namespace ArtSizeReader {
         /// Parses the resolution from a WIDTHxHEIGHT string into an array.
         /// </summary>
         /// <returns>A uint[2] array containing the width in the first and height in the second field.</returns>
-        private uint[] ParseResolution() {
+        private bool ParseResolution() {
             try {
-                return threshold.Split('x').Select(uint.Parse).ToArray();
+                resolution = threshold.Split('x').Select(uint.Parse).ToArray();
+                hasThreshold = true;
+                return true;
             }
-            catch (Exception e) {
+            catch (FormatException fe) {
                 // Resolution is < 0 or doesn't fit into the uint Array
                 Console.Error.WriteLine("Can not parse resolution, must be in format e.g.: 300x300");
-                throw new ArgumentException("Invalid resolution string");
+                return false;
             }
         }
 
@@ -210,8 +212,9 @@ namespace ArtSizeReader {
                     Console.SetOut(logger);
                 }
                 else {
-                    Console.Clear();
-                    Console.Write("\r{0} of {1} ({2}%) finished.", ++i, numOfFiles, ((float)i / (float)numOfFiles) * 100);
+                    /* Print out progress. Argument {3} ensures that any text right of the progress is cleared,
+                     * otherwise old chars are not removed, since the number of decimal places of the percentage may vary.*/
+                    Console.Write("\r{0} of {1} ({2}%) finished.{3}", ++i, numOfFiles, ((float)i / (float)numOfFiles) * 100, new String(' ', 30));
                 }
                 yield return currentFile;
             }
@@ -221,15 +224,12 @@ namespace ArtSizeReader {
         /// Checks if the given path is a valid Windows path.
         /// </summary>
         /// <param name="targetPath">The path to check.</param>
-        private void ValidatePath(string targetPath) {
-            try {
-                targetPath = Path.GetFullPath(targetPath);
+        private bool IsPathValid(string targetPath) {
+            if (!Directory.Exists(targetPath) && !File.Exists(targetPath)) {
+                Console.WriteLine("Could not find target path: " + targetPath);
+                return false;
             }
-            catch (Exception e) {
-                Console.WriteLine("Could not find target path: " + e.Message);
-                Console.WriteLine("for path " + targetPath);
-                throw new ArgumentException("Invalid target path");
-            }
+            else return true;
         }
 
         /// <summary>
