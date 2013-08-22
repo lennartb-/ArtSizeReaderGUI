@@ -18,9 +18,18 @@ namespace ArtSizeReader {
             if (Parser.Default.ParseArguments(args, options)) {
                 ArtReader ar = new ArtReader();
 
-                // Check if we either have a single file...
+                if (options.Logfile != null && options.Silent) {
+                    Console.Error.WriteLine("Can not combine --logfile with --silent, they are mutually exclusive.");
+                    Environment.Exit(4);
+                }
+
+                if (options.Silent) {
+                    ar.IsSilent(true);
+                }
+
+                // Check if we either a target
                 if (options.InputFile != null) {
-                    ar.ToRead(options.InputFile);                    
+                    ar.ToRead(options.InputFile);
                 }
 
                 // Check if a resolution limit is set.
@@ -38,17 +47,17 @@ namespace ArtSizeReader {
                     ar.Create().GetAlbumArt();
                 }
                 catch (ArgumentException ae) {
-                    Console.WriteLine("Error: " + ae.Message);
+                    Console.Error.WriteLine("Error: " + ae.Message);
                 }
-
-                // Wait for user input/keep cmd window open.
-                Console.ReadLine();
             }
+            Console.WriteLine("\nFinished!");
+            // Wait for user input/keep cmd window open.
+            Console.ReadLine();
         }
 
         private static void UnhandledExceptionTrapper(object sender, UnhandledExceptionEventArgs e) {
-            Console.WriteLine(e.ExceptionObject.ToString());
-            Console.WriteLine("Can not continue, press any key to quit.");
+            Console.Error.WriteLine(e.ExceptionObject.ToString());
+            Console.Error.WriteLine("Can not continue, press any key to quit.");
             Console.ReadLine();
             Environment.Exit(5);
         }

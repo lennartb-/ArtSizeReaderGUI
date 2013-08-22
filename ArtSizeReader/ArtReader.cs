@@ -18,6 +18,8 @@ namespace ArtSizeReader {
         IArtReader WithLogfile(string logfile);
 
         IArtReader WithThreshold(string resolution);
+
+        IArtReader IsSilent(bool isSilent);
     }
 
     public class ArtReader : IArtReader {
@@ -27,6 +29,7 @@ namespace ArtSizeReader {
 
         private bool hasLog = false;
         private bool hasThreshold = false;
+        private bool isSilent = false;
         private string logfile;
         private StreamWriter logger = defaultConsoleOutput;
         private uint[] resolution;
@@ -41,12 +44,19 @@ namespace ArtSizeReader {
         public ArtReader Create() {
             ArtReader reader = new ArtReader();
 
-            // Set up logfile.
-            if (logfile != null && InitialiseLogging()) {
-                Console.WriteLine("Logging enabled, writing log to: " + logfile);
-                reader.logfile = logfile;
+            if (isSilent) {
+                Console.SetOut(System.IO.TextWriter.Null);
             }
-            else throw new ArgumentException("Invalid logfile path");
+
+            // Set up logfile.
+            if (logfile != null) {
+                if (InitialiseLogging()) {
+                    Console.WriteLine("Logging enabled, writing log to: " + logfile);
+                    reader.logfile = logfile;
+                }
+                else throw new ArgumentException("Invalid logfile path");
+            }
+
 
             // Check if target path is valid.
             if (IsPathValid(targetPath)) {
@@ -87,6 +97,16 @@ namespace ArtSizeReader {
         /// <returns>The instance of the current object.</returns>
         public IArtReader ToRead(string toRead) {
             this.targetPath = toRead;
+            return this;
+        }
+
+        /// <summary>
+        /// Specifies whether to suppress any output.
+        /// </summary>        
+        /// <param name="isSilent">true for output suppression, false for output.</param>
+        /// <returns>The instance of the current object.</returns>
+        public IArtReader IsSilent(bool isSilent) {
+            this.isSilent = isSilent;
             return this;
         }
 
@@ -159,8 +179,8 @@ namespace ArtSizeReader {
                 else return false;
             }
             catch (Exception e) {
-                Console.WriteLine("Could not create logfile: " + e.Message);
-                Console.WriteLine("for path " + logfile);
+                Console.Error.WriteLine("Could not create logfile: " + e.Message);
+                Console.Error.WriteLine("for path " + logfile);
                 return false;
             }
         }
@@ -229,7 +249,7 @@ namespace ArtSizeReader {
         /// <returns>true if the path is valid, false when not.</returns>
         private bool IsPathValid(string targetPath) {
             if (!Directory.Exists(targetPath) && !File.Exists(targetPath)) {
-                Console.WriteLine("Could not find target path: " + targetPath);
+                Console.Error.WriteLine("Could not find target path: " + targetPath);
                 return false;
             }
             else return true;
@@ -244,9 +264,9 @@ namespace ArtSizeReader {
                 Console.WriteLine(line);
             }
             catch (Exception e) {
-                Console.WriteLine("Could not create logfile: " + e.Message);
-                Console.WriteLine("for path " + logfile);
-                throw new ArgumentException("Unable to create logfile");
+                Console.Error.WriteLine("Could not write to logfile: " + e.Message);
+                Console.Error.WriteLine("for path " + logfile);
+                throw new ArgumentException("Unable to write to logfile");
             }
         }
         #endregion
