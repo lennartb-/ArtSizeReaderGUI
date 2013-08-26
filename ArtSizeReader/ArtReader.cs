@@ -53,6 +53,7 @@ namespace ArtSizeReader {
                 if (InitialiseLogging()) {
                     Console.WriteLine("Logging enabled, writing log to: " + logfile);
                     reader.logfile = logfile;
+                    reader.logger = logger;
                     reader.hasLog = true;
                 }
                 else throw new ArgumentException("Invalid logfile path: " + logfile);
@@ -174,7 +175,9 @@ namespace ArtSizeReader {
             try {
                 if (Directory.Exists(Path.GetDirectoryName(logfile))) {
                     string checkedPath = Path.GetFullPath(logfile);
-                    logger = new StreamWriter(logfile, true);
+                    FileStream fs = new FileStream(logfile, FileMode.Append);
+                    logger = new StreamWriter(fs);
+                    logger.AutoFlush = true;
                     Console.SetOut(logger);
                     hasLog = true;
                     return true;
