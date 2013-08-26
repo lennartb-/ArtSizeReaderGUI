@@ -18,8 +18,6 @@ namespace ArtSizeReader {
         IArtReader WithLogfile(string logfile);
 
         IArtReader WithThreshold(string resolution);
-
-        IArtReader IsSilent(bool isSilent);
     }
 
     public class ArtReader : IArtReader {
@@ -29,7 +27,6 @@ namespace ArtSizeReader {
 
         private bool hasLog = false;
         private bool hasThreshold = false;
-        private bool isSilent = false;
         private string logfile;
         private StreamWriter logger = defaultConsoleOutput;
         private uint[] resolution;
@@ -44,21 +41,16 @@ namespace ArtSizeReader {
         public ArtReader Create() {
             ArtReader reader = new ArtReader();
 
-            if (isSilent) {
-                Console.SetOut(System.IO.TextWriter.Null);
-            }
-
             // Set up logfile.
-            if (logfile != null) {
+            if (this.logfile != null) {
                 if (InitialiseLogging()) {
-                    Console.WriteLine("Logging enabled, writing log to: " + logfile);
                     reader.logfile = logfile;
                     reader.logger = logger;
                     reader.hasLog = true;
+                    Console.WriteLine("Logging enabled, writing log to: " + logfile);
                 }
                 else throw new ArgumentException("Invalid logfile path: " + logfile);
             }
-
 
             // Check if target path is valid.
             if (IsPathValid(targetPath)) {
@@ -93,7 +85,7 @@ namespace ArtSizeReader {
                 }
             }
         }
-
+        #region Interface allocation methods
         /// <summary>
         /// Specifies the file or path that will be analysed.
         /// </summary>
@@ -101,16 +93,6 @@ namespace ArtSizeReader {
         /// <returns>The instance of the current object.</returns>
         public IArtReader ToRead(string toRead) {
             this.targetPath = toRead;
-            return this;
-        }
-
-        /// <summary>
-        /// Specifies whether to suppress any output.
-        /// </summary>        
-        /// <param name="isSilent">true for output suppression, false for output.</param>
-        /// <returns>The instance of the current object.</returns>
-        public IArtReader IsSilent(bool isSilent) {
-            this.isSilent = isSilent;
             return this;
         }
 
@@ -133,26 +115,30 @@ namespace ArtSizeReader {
             this.threshold = threshold;
             return this;
         }
-
-        #region Private Methods
+        #endregion
+        #region Private methods
         /// <summary>
         /// Analyzes a file for album art and handles checking of the size.
         /// </summary>
         /// <param name="file">The file to check.</param>
         private void AnalyzeFile(string file) {
             UltraID3 tags = new UltraID3();
-            try {
-                tags.Read(file);
-                ID3FrameCollection covers = tags.ID3v2Tag.Frames.GetFrames(CommonMultipleInstanceID3v2FrameTypes.Picture);
+
+            tags.Read(file);
+            ID3FrameCollection covers = tags.ID3v2Tag.Frames.GetFrames(CommonMultipleInstanceID3v2FrameTypes.Picture);
+            // Check if there actually is a cover.
+            if (covers.Count > 0) {
                 ID3v2PictureFrame cover = (ID3v2PictureFrame)covers[0];
                 Bitmap image = new Bitmap((Image)cover.Picture);
                 if (hasThreshold && !CheckSize(image)) {
-                    Console.WriteLine("Checked Artwork size for file " + file + " is below limit: " + image.Size.Width + "x" + image.Size.Height);
+                    Console.WriteLine("\nChecked Artwork size for file " + file + " is below limit: " + image.Size.Width + "x" + image.Size.Height);
                 }
             }
-            catch (Exception e) {
-                Console.WriteLine("No cover found for: " + file);
+            // No covers found.
+            else {
+                Console.WriteLine("\nNo cover found for: " + file);
             }
+
         }
 
         /// <summary>
@@ -202,8 +188,9 @@ namespace ArtSizeReader {
                 return true;
             }
             catch (FormatException fe) {
-                // Resolution is < 0 or doesn't fit into the uint Array
+                // Resolution is < 0 or doesn't fit into the uint Array                
                 Console.WriteLine("Can not parse resolution, must be in format e.g.: 300x300");
+                Console.WriteLine(fe.Message);
                 return false;
             }
         }

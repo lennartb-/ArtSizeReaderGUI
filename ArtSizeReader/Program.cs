@@ -20,7 +20,7 @@ namespace ArtSizeReader {
             }
 
             // Wait for user input/keep cmd window open.
-            //Console.ReadLine();
+            Console.ReadLine();
         }
 
         private static bool ParseOptions(string[] args) {
@@ -29,15 +29,6 @@ namespace ArtSizeReader {
 
             if (Parser.Default.ParseArguments(args, options)) {
                 ArtReader ar = new ArtReader();
-
-                if (options.Logfile != null && options.Silent) {
-                    Console.WriteLine("Can not combine --logfile with --silent, they are mutually exclusive.");
-                    Environment.Exit(4);
-                }
-
-                if (options.Silent) {
-                    ar.IsSilent(true);
-                }
 
                 // Check if we either a target
                 if (options.InputFile != null) {
