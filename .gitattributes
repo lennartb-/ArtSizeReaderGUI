@@ -6,6 +6,7 @@ ArtSizeReader/App.config -text
 ArtSizeReader/ArtReader.cs -text
 ArtSizeReader/ArtSizeReader.csproj -text
 ArtSizeReader/ArtSizeReader.csproj.user -text
+ArtSizeReader/License.txt -text
 ArtSizeReader/Options.cs -text
 ArtSizeReader/Program.cs -text
 ArtSizeReader/Properties/AssemblyInfo.cs -text
