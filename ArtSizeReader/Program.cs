@@ -17,10 +17,12 @@ namespace ArtSizeReader {
             }
             else {
                 Console.WriteLine("\nFinished with errors.");
+                // Wait for user input/keep cmd window open.
+                Console.ReadLine();
             }
 
             // Wait for user input/keep cmd window open.
-            Console.ReadLine();
+            // Console.ReadLine();
         }
 
         private static bool ParseOptions(string[] args) {
@@ -57,6 +59,12 @@ namespace ArtSizeReader {
             }
             return false;
         }
+
+        /// <summary>
+        /// Gracefully handle any unforseen exceptions.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
 
         private static void UnhandledExceptionTrapper(object sender, UnhandledExceptionEventArgs e) {
             Console.WriteLine(e.ExceptionObject.ToString());

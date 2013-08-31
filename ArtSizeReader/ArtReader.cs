@@ -159,9 +159,10 @@ namespace ArtSizeReader {
         /// <returns>true if the path is valid, false when not.</returns>
         private bool InitialiseLogging() {
             try {
-                if (Directory.Exists(Path.GetDirectoryName(logfile))) {
-                    string checkedPath = Path.GetFullPath(logfile);
-                    FileStream fs = new FileStream(logfile, FileMode.Append);
+                string logfilePath = Path.GetFullPath(logfile);
+                bool validDir = Directory.Exists(Path.GetDirectoryName(logfilePath));
+                if (validDir) {                    
+                    FileStream fs = new FileStream(logfilePath, FileMode.Append);
                     logger = new StreamWriter(fs);
                     logger.AutoFlush = true;
                     Console.SetOut(logger);

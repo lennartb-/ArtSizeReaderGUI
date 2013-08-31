@@ -14,7 +14,7 @@ namespace ArtSizeReader {
           HelpText = "Writes output into the specified file. If no directory is given, the current directory will be used.")]
         public string Logfile { get; set; }
 
-        [Option('t', "threshold", Required = false,
+        [Option('t', "threshold", Required = true,
           HelpText = "Cover sizes above this threshold (in pixels) will be ignored. Format example: 400x400.")]
         public string Threshold { get; set; }
 
