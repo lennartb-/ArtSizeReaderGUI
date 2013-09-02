@@ -18,6 +18,10 @@ namespace ArtSizeReader {
           HelpText = "Cover sizes above this threshold (in pixels) will be ignored. Format example: 400x400.")]
         public string Threshold { get; set; }
 
+        [Option('p', "playlist",
+          HelpText = "Creates a M3U playlist with all scanned tracks below the threshold. Use to quickly load all affected files into your favorite tag editor or media player.")]
+        public string Playlist { get; set; }
+
         [HelpOption]
         public string GetUsage() {
             return HelpText.AutoBuild(this, (HelpText current) => HelpText.DefaultParsingErrorsHandler(this, current));

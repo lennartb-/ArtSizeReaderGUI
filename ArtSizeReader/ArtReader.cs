@@ -5,20 +5,7 @@ using System.IO;
 using System.Linq;
 using HundredMilesSoftware.UltraID3Lib;
 
-namespace ArtSizeReader {
-
-    /// <summary>
-    /// Exposes the fluent inteface for ArtReader, which supports the analysis of a file or directory with various options.
-    /// </summary>
-    public interface IArtReader {
-        ArtReader Create();
-
-        IArtReader ToRead(string toRead);
-
-        IArtReader WithLogfile(string logfile);
-
-        IArtReader WithThreshold(string resolution);
-    }
+namespace ArtSizeReader {  
 
     public class ArtReader : IArtReader {
 
@@ -27,12 +14,15 @@ namespace ArtSizeReader {
 
         private bool hasLog = false;
         private bool hasThreshold = false;
+        private bool hasPlaylist = false;
         private string logfile;
         private StreamWriter logger = defaultConsoleOutput;
         private uint[] resolution;
         private string targetPath;
         private string threshold;
-
+        private string playlist;
+        private Playlist outList;
+        
         /// <summary>
         /// Builds an ArtReader object from the specified parameters and checks if they are valid.
         /// </summary>
@@ -65,6 +55,15 @@ namespace ArtSizeReader {
                 Console.WriteLine("Threshold enabled, selected value: " + resolution[0] + "x" + resolution[1]);
             }
             else throw new ArgumentException("Invalid resolution: " + threshold);
+
+            // Set up playlist output.
+            if (this.playlist != null) {
+                reader.outList = new Playlist(playlist);
+                reader.playlist = playlist;
+                reader.hasPlaylist = true;
+                Console.WriteLine("Playlist output enabled, writing to: " + playlist);
+            }
+            else throw new ArgumentException("Invalid playlist path: " + playlist);
 
             return reader;
         }
@@ -115,6 +114,16 @@ namespace ArtSizeReader {
             this.threshold = threshold;
             return this;
         }
+
+        /// <summary>
+        /// Specifies the filename and path of the playlist.
+        /// </summary>
+        /// <param name="playlist">The filename and path of the playlist.</param>
+        /// <returns>The instance of the current object.</returns>
+        public IArtReader WithPlaylist(string playlist) {
+            this.playlist = playlist;
+            return this;
+        }
         #endregion
         #region Private methods
         /// <summary>
@@ -132,6 +141,7 @@ namespace ArtSizeReader {
                 Bitmap image = new Bitmap((Image)cover.Picture);
                 if (hasThreshold && !CheckSize(image)) {
                     Console.WriteLine("\nChecked Artwork size for file " + file + " is below limit: " + image.Size.Width + "x" + image.Size.Height);
+                    outList.Write(file);
                 }
             }
             // No covers found.
@@ -161,7 +171,7 @@ namespace ArtSizeReader {
             try {
                 string logfilePath = Path.GetFullPath(logfile);
                 bool validDir = Directory.Exists(Path.GetDirectoryName(logfilePath));
-                if (validDir) {                    
+                if (validDir) {
                     FileStream fs = new FileStream(logfilePath, FileMode.Append);
                     logger = new StreamWriter(fs);
                     logger.AutoFlush = true;

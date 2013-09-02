@@ -50,7 +50,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ArtReader.cs" />
+    <Compile Include="IArtReader.cs" />
     <Compile Include="Options.cs" />
+    <Compile Include="Playlist.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -47,6 +47,11 @@ namespace ArtSizeReader {
                     ar.WithLogfile(options.Logfile);
                 }
 
+                // Check if output will be logged to file.
+                if (options.Playlist != null) {
+                    ar.WithPlaylist(options.Playlist);
+                }
+
                 try {
                     // Create object and start analyzing the files.
                     ar.Create().GetAlbumArt();
