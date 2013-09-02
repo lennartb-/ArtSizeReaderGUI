@@ -3,25 +3,19 @@
 namespace ArtSizeReader {
     class Playlist {
 
-        private string path;
-        private StreamWriter logger;
+        private string path;        
 
         public Playlist(string path) {
             this.path = path;
-            FileStream fs = new FileStream(path, FileMode.Append);
-            logger = new StreamWriter(fs);
-            logger.AutoFlush = true;
         }
 
-        public bool Write(string entry) {
-            logger.WriteLine(entry);
+        public bool Write(string entry) {            
+            File.AppendAllText(path, "\n"+entry);
             return true;
         }
 
         public bool WriteBatch(string[] entries) {
-            foreach (string entry in entries) {
-                logger.WriteLine(entry);
-            }
+            File.AppendAllLines(path, entries);
             return true;
         }
     }

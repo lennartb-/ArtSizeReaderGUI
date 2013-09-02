@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using HundredMilesSoftware.UltraID3Lib;
 
-namespace ArtSizeReader {  
+namespace ArtSizeReader {
 
     public class ArtReader : IArtReader {
 
@@ -13,30 +13,25 @@ namespace ArtSizeReader {
         private static StreamWriter defaultConsoleOutput = new StreamWriter(Console.OpenStandardOutput());
 
         private bool hasLog = false;
-        private bool hasThreshold = false;
         private bool hasPlaylist = false;
         private string logfile;
         private StreamWriter logger = defaultConsoleOutput;
         private uint[] resolution;
         private string targetPath;
         private string threshold;
-        private string playlist;
-        private Playlist outList;
-        
+        private string playlistPath;
+        private Playlist playlist;
+
         /// <summary>
         /// Builds an ArtReader object from the specified parameters and checks if they are valid.
         /// </summary>
         /// <returns>An ArtReader objects with the desired input parameters.</returns>
         /// <exception cref="ArgumentException">Thrown when any of the supplied arguments are invalid.</exception>
         public ArtReader Create() {
-            ArtReader reader = new ArtReader();
 
             // Set up logfile.
             if (this.logfile != null) {
                 if (InitialiseLogging()) {
-                    reader.logfile = logfile;
-                    reader.logger = logger;
-                    reader.hasLog = true;
                     Console.WriteLine("Logging enabled, writing log to: " + logfile);
                 }
                 else throw new ArgumentException("Invalid logfile path: " + logfile);
@@ -44,37 +39,36 @@ namespace ArtSizeReader {
 
             // Check if target path is valid.
             if (IsPathValid(targetPath)) {
-                reader.targetPath = targetPath;
+                Console.WriteLine("Analyzing file(s) in " + targetPath);
             }
             else throw new ArgumentException("Invalid target path: " + targetPath);
 
             // Check and Parse resolution.
             if (this.threshold != null && ParseResolution()) {
-                reader.resolution = resolution;
-                reader.hasThreshold = true;
                 Console.WriteLine("Threshold enabled, selected value: " + resolution[0] + "x" + resolution[1]);
             }
             else throw new ArgumentException("Invalid resolution: " + threshold);
 
             // Set up playlist output.
-            if (this.playlist != null) {
-                reader.outList = new Playlist(playlist);
-                reader.playlist = playlist;
-                reader.hasPlaylist = true;
-                Console.WriteLine("Playlist output enabled, writing to: " + playlist);
+            if (this.playlistPath != null) {
+                if (InitialisePlaylist()) {
+                    Console.WriteLine("Playlist output enabled, writing to: " + playlistPath);
+                }
+                else throw new ArgumentException("Invalid playlist path: " + playlistPath);
             }
-            else throw new ArgumentException("Invalid playlist path: " + playlist);
 
-            return reader;
+            return this;
         }
 
         /// <summary>
         /// Starts fetching the album art from the specified file or directory.
         /// </summary>
-        public void GetAlbumArt() {
+        /// <returns>True if analysing succeeded, false if the file or path could not be found.</returns>
+        public bool GetAlbumArt() {
             // Target is a single file
             if (File.Exists(targetPath)) {
                 AnalyzeFile(targetPath);
+                return true;
             }
 
             // Target is a directory
@@ -82,7 +76,9 @@ namespace ArtSizeReader {
                 foreach (string file in ReadFiles(targetPath)) {
                     AnalyzeFile(file);
                 }
+                return true;
             }
+            return false;
         }
         #region Interface allocation methods
         /// <summary>
@@ -121,10 +117,11 @@ namespace ArtSizeReader {
         /// <param name="playlist">The filename and path of the playlist.</param>
         /// <returns>The instance of the current object.</returns>
         public IArtReader WithPlaylist(string playlist) {
-            this.playlist = playlist;
+            this.playlistPath = playlist;
             return this;
         }
         #endregion
+
         #region Private methods
         /// <summary>
         /// Analyzes a file for album art and handles checking of the size.
@@ -139,10 +136,16 @@ namespace ArtSizeReader {
             if (covers.Count > 0) {
                 ID3v2PictureFrame cover = (ID3v2PictureFrame)covers[0];
                 Bitmap image = new Bitmap((Image)cover.Picture);
-                if (hasThreshold && !CheckSize(image)) {
-                    Console.WriteLine("\nChecked Artwork size for file " + file + " is below limit: " + image.Size.Width + "x" + image.Size.Height);
-                    outList.Write(file);
+                if (!CheckSize(image)) {
+                    // Little hack to properly format the Console output if not written to logfile.
+                    if (!hasLog) Console.Write("\r");
+
+                    Console.WriteLine("Checked Artwork size for file " + file + " is below limit: " + image.Size.Width + "x" + image.Size.Height);
+                    if (hasPlaylist) {
+                        playlist.Write(file);
+                    }
                 }
+
             }
             // No covers found.
             else {
@@ -161,6 +164,18 @@ namespace ArtSizeReader {
                 return false;
             }
             else return true;
+        }
+
+        // Todo: ... 
+        private bool InitialisePlaylist() {
+            string fullPlaylistPath = Path.GetFullPath(playlistPath);
+            bool validDir = Directory.Exists(Path.GetDirectoryName(fullPlaylistPath));
+            if (validDir) {
+                hasPlaylist = true;
+                playlist = new Playlist(playlistPath);
+                return true;
+            }
+            else return false;
         }
 
         /// <summary>
@@ -195,7 +210,6 @@ namespace ArtSizeReader {
         private bool ParseResolution() {
             try {
                 resolution = threshold.Split('x').Select(uint.Parse).ToArray();
-                hasThreshold = true;
                 return true;
             }
             catch (FormatException fe) {

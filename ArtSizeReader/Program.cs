@@ -22,7 +22,7 @@ namespace ArtSizeReader {
             }
 
             // Wait for user input/keep cmd window open.
-            // Console.ReadLine();
+             Console.ReadLine();
         }
 
         private static bool ParseOptions(string[] args) {
