@@ -6,21 +6,19 @@ using System.Linq;
 using HundredMilesSoftware.UltraID3Lib;
 
 namespace ArtSizeReader {
-
     public class ArtReader : IArtReader {
-
         // Preserve standard Console output
         private static StreamWriter defaultConsoleOutput = new StreamWriter(Console.OpenStandardOutput());
 
-        private bool hasLog = false;
-        private bool hasPlaylist = false;
-        private string logfile;
-        private StreamWriter logger = defaultConsoleOutput;
+        private bool isLoggingEnabled = false;
+        private bool isPlaylistEnabled = false;
+        private string logfilePath;
+        private StreamWriter logfileWriter = defaultConsoleOutput;
+        private Playlist playlist;
+        private string playlistPath;
         private uint[] resolution;
         private string targetPath;
         private string threshold;
-        private string playlistPath;
-        private Playlist playlist;
 
         /// <summary>
         /// Builds an ArtReader object from the specified parameters and checks if they are valid.
@@ -28,13 +26,12 @@ namespace ArtSizeReader {
         /// <returns>An ArtReader objects with the desired input parameters.</returns>
         /// <exception cref="ArgumentException">Thrown when any of the supplied arguments are invalid.</exception>
         public ArtReader Create() {
-
             // Set up logfile.
-            if (this.logfile != null) {
+            if (this.logfilePath != null) {
                 if (InitialiseLogging()) {
-                    Console.WriteLine("Logging enabled, writing log to: " + logfile);
+                    Console.WriteLine("Logging enabled, writing log to: " + logfilePath);
                 }
-                else throw new ArgumentException("Invalid logfile path: " + logfile);
+                else throw new ArgumentException("Invalid logfile path: " + logfilePath);
             }
 
             // Check if target path is valid.
@@ -80,7 +77,9 @@ namespace ArtSizeReader {
             }
             return false;
         }
+
         #region Interface allocation methods
+
         /// <summary>
         /// Specifies the file or path that will be analysed.
         /// </summary>
@@ -97,17 +96,7 @@ namespace ArtSizeReader {
         /// <param name="logfile">The path and filename of the logfile.</param>
         /// <returns>The instance of the current object.</returns>
         public IArtReader WithLogfile(string logfile) {
-            this.logfile = logfile;
-            return this;
-        }
-
-        /// <summary>
-        /// Specifies the art size threshold in the format WIDHTxHEIGHT.
-        /// </summary>
-        /// <param name="threshold">The threshold.</param>
-        /// <returns>The instance of the current object.</returns>
-        public IArtReader WithThreshold(string threshold) {
-            this.threshold = threshold;
+            this.logfilePath = logfile;
             return this;
         }
 
@@ -120,9 +109,20 @@ namespace ArtSizeReader {
             this.playlistPath = playlist;
             return this;
         }
-        #endregion
+
+        /// <summary>
+        /// Specifies the art size threshold in the format WIDHTxHEIGHT.
+        /// </summary>
+        /// <param name="threshold">The threshold.</param>
+        /// <returns>The instance of the current object.</returns>
+        public IArtReader WithThreshold(string threshold) {
+            this.threshold = threshold;
+            return this;
+        }
+        #endregion Interface allocation methods
 
         #region Private methods
+
         /// <summary>
         /// Analyzes a file for album art and handles checking of the size.
         /// </summary>
@@ -130,28 +130,28 @@ namespace ArtSizeReader {
         private void AnalyzeFile(string file) {
             UltraID3 tags = new UltraID3();
 
+            // Reader tags from file and get the content of the cover tag
             tags.Read(file);
             ID3FrameCollection covers = tags.ID3v2Tag.Frames.GetFrames(CommonMultipleInstanceID3v2FrameTypes.Picture);
+
             // Check if there actually is a cover.
             if (covers.Count > 0) {
                 ID3v2PictureFrame cover = (ID3v2PictureFrame)covers[0];
-                Bitmap image = new Bitmap((Image)cover.Picture);
-                if (!CheckSize(image)) {
+                if (!CheckSize(cover.Picture)) {
                     // Little hack to properly format the Console output if not written to logfile.
-                    if (!hasLog) Console.Write("\r");
+                    if (!isLoggingEnabled) Console.Write("\r");
 
-                    Console.WriteLine("Checked Artwork size for file " + file + " is below limit: " + image.Size.Width + "x" + image.Size.Height);
-                    if (hasPlaylist) {
+                    Console.WriteLine("Checked Artwork size for file " + file + " is below limit: " + cover.Picture.Size.Width + "x" + cover.Picture.Size.Height);
+                    if (isPlaylistEnabled) {
                         playlist.Write(file);
                     }
                 }
-
             }
+
             // No covers found.
             else {
                 Console.WriteLine("\nNo cover found for: " + file);
             }
-
         }
 
         /// <summary>
@@ -166,41 +166,56 @@ namespace ArtSizeReader {
             else return true;
         }
 
-        // Todo: ... 
-        private bool InitialisePlaylist() {
-            string fullPlaylistPath = Path.GetFullPath(playlistPath);
-            bool validDir = Directory.Exists(Path.GetDirectoryName(fullPlaylistPath));
-            if (validDir) {
-                hasPlaylist = true;
-                playlist = new Playlist(playlistPath);
-                return true;
-            }
-            else return false;
-        }
-
         /// <summary>
         /// Manages the initialisation of the logfile.
         /// </summary>
         /// <returns>true if the path is valid, false when not.</returns>
         private bool InitialiseLogging() {
             try {
-                string logfilePath = Path.GetFullPath(logfile);
-                bool validDir = Directory.Exists(Path.GetDirectoryName(logfilePath));
+                string fullLogfilePath = Path.GetFullPath(logfilePath);
+                bool validDir = Directory.Exists(Path.GetDirectoryName(fullLogfilePath));
                 if (validDir) {
-                    FileStream fs = new FileStream(logfilePath, FileMode.Append);
-                    logger = new StreamWriter(fs);
-                    logger.AutoFlush = true;
-                    Console.SetOut(logger);
-                    hasLog = true;
+                    FileStream fs = new FileStream(fullLogfilePath, FileMode.Append);
+                    logfileWriter = new StreamWriter(fs);
+                    logfileWriter.AutoFlush = true;
+                    Console.SetOut(logfileWriter);
+                    isLoggingEnabled = true;
                     return true;
                 }
                 else return false;
             }
             catch (Exception e) {
                 Console.WriteLine("Could not create logfile: " + e.Message);
-                Console.WriteLine("for path " + logfile);
+                Console.WriteLine("for path " + logfilePath);
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Manages the initialisation of the playlist.
+        /// </summary>
+        /// <returns>true if the path to the playlist is valid, false when not.</returns>
+        private bool InitialisePlaylist() {
+            string fullPlaylistPath = Path.GetFullPath(playlistPath);
+            bool validDir = Directory.Exists(Path.GetDirectoryName(fullPlaylistPath));
+            if (validDir) {
+                isPlaylistEnabled = true;
+                playlist = new Playlist(playlistPath);
+                return true;
+            }
+            else return false;
+        }
+        /// <summary>
+        /// Checks if the given path is a valid Windows path.
+        /// </summary>
+        /// <param name="targetPath">The path to check.</param>
+        /// <returns>true if the path is valid, false when not.</returns>
+        private bool IsPathValid(string targetPath) {
+            if (!Directory.Exists(targetPath) && !File.Exists(targetPath)) {
+                Console.WriteLine("Could not find target path: " + targetPath);
+                return false;
+            }
+            else return true;
         }
 
         /// <summary>
@@ -213,7 +228,7 @@ namespace ArtSizeReader {
                 return true;
             }
             catch (FormatException fe) {
-                // Resolution is < 0 or doesn't fit into the uint Array                
+                // Resolution is < 0 or doesn't fit into the uint Array
                 Console.WriteLine("Can not parse resolution, must be in format e.g.: 300x300");
                 Console.WriteLine(fe.Message);
                 return false;
@@ -246,47 +261,19 @@ namespace ArtSizeReader {
             int i = 0;
             foreach (string currentFile in musicFiles) {
                 // If logging to file is enabled, print out the progress to console anyway.
-                if (hasLog) {
+                if (isLoggingEnabled) {
                     Console.SetOut(defaultConsoleOutput);
-                    Console.Write("\r{0} of {1} ({2}%) finished.{3}", ++i, numOfFiles, ((float)i / (float)numOfFiles) * 100, new String(' ', 10));
-                    Console.SetOut(logger);
+                    Console.Write("\r{0} of {1} ({2}%) finished.{3}", ++i, numOfFiles, ((float)i / (float)numOfFiles) * 100, new string(' ', 10));
+                    Console.SetOut(logfileWriter);
                 }
                 else {
                     /* Print out progress. Argument {3} ensures that any text right of the progress is cleared,
                      * otherwise old chars are not removed, since the number of decimal places of the percentage may vary.*/
-                    Console.Write("\r{0} of {1} ({2}%) finished.{3}", ++i, numOfFiles, ((float)i / (float)numOfFiles) * 100, new String(' ', 10));
+                    Console.Write("\r{0} of {1} ({2}%) finished.{3}", ++i, numOfFiles, ((float)i / (float)numOfFiles) * 100, new string(' ', 10));
                 }
                 yield return currentFile;
             }
         }
-
-        /// <summary>
-        /// Checks if the given path is a valid Windows path.
-        /// </summary>
-        /// <param name="targetPath">The path to check.</param>
-        /// <returns>true if the path is valid, false when not.</returns>
-        private bool IsPathValid(string targetPath) {
-            if (!Directory.Exists(targetPath) && !File.Exists(targetPath)) {
-                Console.WriteLine("Could not find target path: " + targetPath);
-                return false;
-            }
-            else return true;
-        }
-
-        /// <summary>
-        /// Writes a line to into the logfile.
-        /// </summary>
-        /// <param name="line">The line to write.</param>
-        private void WriteToLogFile(string line) {
-            try {
-                Console.WriteLine(line);
-            }
-            catch (Exception e) {
-                Console.WriteLine("Could not write to logfile: " + e.Message);
-                Console.WriteLine("for path " + logfile);
-                throw new ArgumentException("Unable to write to logfile");
-            }
-        }
-        #endregion
+        #endregion Private methods
     }
 }

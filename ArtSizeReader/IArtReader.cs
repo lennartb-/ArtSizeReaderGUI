@@ -19,6 +19,4 @@ namespace ArtSizeReader {
 
         IArtReader WithPlaylist(string playlist);
     }
-
-
 }

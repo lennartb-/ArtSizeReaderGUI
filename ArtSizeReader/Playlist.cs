@@ -1,16 +1,16 @@
 ﻿using System.IO;
 
 namespace ArtSizeReader {
-    class Playlist {
 
-        private string path;        
+    internal class Playlist {
+        private string path;
 
         public Playlist(string path) {
             this.path = path;
         }
 
-        public bool Write(string entry) {            
-            File.AppendAllText(path, "\n"+entry);
+        public bool Write(string entry) {
+            File.AppendAllText(path, "\n" + entry);
             return true;
         }
 
