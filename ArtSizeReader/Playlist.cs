@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using System.Text;
 
 namespace ArtSizeReader {
 
@@ -7,10 +9,16 @@ namespace ArtSizeReader {
 
         public Playlist(string path) {
             this.path = path;
+            try {
+                File.AppendAllText(path, String.Empty, Encoding.UTF8);
+            }
+            catch {
+                throw;
+            }
         }
 
         public bool Write(string entry) {
-            File.AppendAllText(path, "\n" + entry);
+            File.AppendAllText(path, "\n" + entry, Encoding.UTF8);
             return true;
         }
 

@@ -140,17 +140,19 @@ namespace ArtSizeReader {
                 if (!CheckSize(cover.Picture)) {
                     // Little hack to properly format the Console output if not written to logfile.
                     if (!isLoggingEnabled) Console.Write("\r");
-
                     Console.WriteLine("Checked Artwork size for file " + file + " is below limit: " + cover.Picture.Size.Width + "x" + cover.Picture.Size.Height);
-                    if (isPlaylistEnabled) {
-                        playlist.Write(file);
-                    }
+                    if (isPlaylistEnabled) playlist.Write(file);
+
                 }
             }
 
             // No covers found.
             else {
-                Console.WriteLine("\nNo cover found for: " + file);
+                // Little hack to properly format the Console output if not written to logfile.
+                if (!isLoggingEnabled) Console.Write("\r");
+                Console.WriteLine("No cover found for: " + file);
+                if (isPlaylistEnabled) playlist.Write(file);
+
             }
         }
 
@@ -185,25 +187,31 @@ namespace ArtSizeReader {
                 else return false;
             }
             catch (Exception e) {
-                Console.WriteLine("Could not create logfile: " + e.Message);
-                Console.WriteLine("for path " + logfilePath);
+                Console.WriteLine("Could not create logfile: " + e.Message + "(" + e.GetType().Name + ")");
                 return false;
             }
         }
+
 
         /// <summary>
         /// Manages the initialisation of the playlist.
         /// </summary>
         /// <returns>true if the path to the playlist is valid, false when not.</returns>
         private bool InitialisePlaylist() {
-            string fullPlaylistPath = Path.GetFullPath(playlistPath);
-            bool validDir = Directory.Exists(Path.GetDirectoryName(fullPlaylistPath));
-            if (validDir) {
-                isPlaylistEnabled = true;
-                playlist = new Playlist(playlistPath);
-                return true;
+            try {
+                string fullPlaylistPath = Path.GetFullPath(playlistPath);
+                bool validDir = Directory.Exists(Path.GetDirectoryName(fullPlaylistPath));
+                if (validDir) {
+                    isPlaylistEnabled = true;
+                    playlist = new Playlist(playlistPath);
+                    return true;
+                }
+                else return false;
             }
-            else return false;
+            catch (Exception e) {
+                Console.WriteLine("Could not create playlist: " + e.Message + "(" + e.GetType().Name + ")");
+                return false;
+            }
         }
         /// <summary>
         /// Checks if the given path is a valid Windows path.
