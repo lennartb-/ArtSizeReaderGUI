@@ -22,6 +22,10 @@ namespace ArtSizeReader {
           HelpText = "Creates a M3U playlist with all scanned tracks below the threshold. Use to quickly load all affected files into your favorite tag editor or media player.")]
         public string Playlist { get; set; }
 
+        [Option('r', "ratio",
+          HelpText = "Additionally restrict the cover size to a 1:1 aspect ratio. If enabled e.g 400x350 will cause an error while 400x400 won't.")]
+        public bool Ratio { get; set; }
+
         [HelpOption]
         public string GetUsage() {
             return HelpText.AutoBuild(this, (HelpText current) => HelpText.DefaultParsingErrorsHandler(this, current));

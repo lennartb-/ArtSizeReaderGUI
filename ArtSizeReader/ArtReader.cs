@@ -12,6 +12,7 @@ namespace ArtSizeReader {
 
         private bool isLoggingEnabled = false;
         private bool isPlaylistEnabled = false;
+        private bool hasRatio = false;
         private string logfilePath;
         private StreamWriter logfileWriter = defaultConsoleOutput;
         private Playlist playlist;
@@ -45,6 +46,10 @@ namespace ArtSizeReader {
                 Console.WriteLine("Threshold enabled, selected value: " + resolution[0] + "x" + resolution[1]);
             }
             else throw new ArgumentException("Invalid resolution: " + threshold);
+
+            if (hasRatio) {
+                Console.WriteLine("Checking for proper ratio is enabled.");
+            }
 
             // Set up playlist output.
             if (this.playlistPath != null) {
@@ -119,6 +124,16 @@ namespace ArtSizeReader {
             this.threshold = threshold;
             return this;
         }
+
+        /// <summary>
+        /// Specifies the art size threshold in the format WIDHTxHEIGHT.
+        /// </summary>
+        /// <param name="threshold">The threshold.</param>
+        /// <returns>The instance of the current object.</returns>
+        public IArtReader WithRatio(bool hasRatio) {
+            this.hasRatio = hasRatio;
+            return this;
+        }
         #endregion Interface allocation methods
 
         #region Private methods
@@ -137,10 +152,10 @@ namespace ArtSizeReader {
             // Check if there actually is a cover.
             if (covers.Count > 0) {
                 ID3v2PictureFrame cover = (ID3v2PictureFrame)covers[0];
-                if (!CheckSize(cover.Picture)) {
+                if (!CheckSize(cover.Picture, hasRatio)) {
                     // Little hack to properly format the Console output if not written to logfile.
                     if (!isLoggingEnabled) Console.Write("\r");
-                    Console.WriteLine("Checked Artwork size for file " + file + " is below limit: " + cover.Picture.Size.Width + "x" + cover.Picture.Size.Height);
+                    Console.WriteLine("Checked Artwork size for file " + file + " is below limit or has wrong ratio: " + cover.Picture.Size.Width + "x" + cover.Picture.Size.Height);
                     if (isPlaylistEnabled) playlist.Write(file);
 
                 }
@@ -161,9 +176,15 @@ namespace ArtSizeReader {
         /// </summary>
         /// <param name="image">The image to check.</param>
         /// <returns>false if the image is below the limit, true if not.</returns>
-        private bool CheckSize(Bitmap image) {
+        private bool CheckSize(Bitmap image, bool hasRatio) {
             if (image.Size.Width < resolution[0] || image.Size.Height < resolution[1]) {
                 return false;
+            }
+            if (hasRatio) {
+                if (image.Size.Width != image.Size.Height) {
+                    return false;
+                }
+                else return true;
             }
             else return true;
         }

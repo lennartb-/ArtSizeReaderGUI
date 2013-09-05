@@ -22,7 +22,7 @@ namespace ArtSizeReader {
             }
 
             // Wait for user input/keep cmd window open.
-             Console.ReadLine();
+            Console.ReadLine();
         }
 
         private static bool ParseOptions(string[] args) {
@@ -50,6 +50,11 @@ namespace ArtSizeReader {
                 // Check if output will be logged to file.
                 if (options.Playlist != null) {
                     ar.WithPlaylist(options.Playlist);
+                }
+
+                // Check if the covers should be checked for a 1:1 ratio.
+                if (options.Ratio) {
+                    ar.WithRatio(true);
                 }
 
                 try {
