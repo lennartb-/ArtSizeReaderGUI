@@ -58,7 +58,8 @@ namespace ArtSizeReader {
                 }
 
                 // Check if the covers should be checked for a 1:1 ratio.
-                if (options.Size != null) {
+                if (options.Size != 0.0) {
+                    Console.WriteLine(options.Size);
                     ar.WithSize(options.Size);
                 }
 

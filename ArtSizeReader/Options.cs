@@ -27,8 +27,8 @@ namespace ArtSizeReader {
         public bool Ratio { get; set; }
 
         [Option('s', "size",
-          HelpText = "Cover file sizes below this threshold (in kilobytes) will be ignored. Useful to check for large image files. Format example: 1000 (equals 1 Megabyte)")]
-        public int Size { get; set; }
+          HelpText = "Cover file sizes below this threshold (in kilobytes) will be ignored. Useful to check for large image files. Format example: 1000 (equals 1 Megabyte). Use a negative value to print files sizes for all images.")]
+        public double Size { get; set; }
 
         [HelpOption]
         public string GetUsage() {

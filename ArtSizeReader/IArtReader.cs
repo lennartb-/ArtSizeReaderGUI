@@ -16,6 +16,6 @@ namespace ArtSizeReader {
 
         IArtReader WithRatio(bool hasRatio);
 
-        IArtReader WithSize(int size);
+        IArtReader WithSize(double size);
     }
 }

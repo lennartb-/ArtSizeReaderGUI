@@ -13,7 +13,7 @@ namespace ArtSizeReader {
         private static StreamWriter defaultConsoleOutput = new StreamWriter(Console.OpenStandardOutput());
 
         private bool hasRatio = false;
-        private bool hasSize = false;
+        private bool hasSizeLimit = false;
         private bool isLoggingEnabled = false;
         private bool isPlaylistEnabled = false;
         private string logfilePath;
@@ -23,7 +23,7 @@ namespace ArtSizeReader {
         private uint[] resolution;
         private string targetPath;
         private string threshold;
-        private int size;
+        private double size;
 
         /// <summary>
         /// Builds an ArtReader object from the specified parameters and checks if they are valid.
@@ -55,9 +55,9 @@ namespace ArtSizeReader {
                 Console.WriteLine("Checking for proper ratio is enabled.");
             }
 
-            if (this.size != null) {
-                hasSize = true;
-                Console.WriteLine("File size threshold enabled, reporting files above " + size + " KB");
+            if (this.size != 0.0) {
+                hasSizeLimit = true;
+                Console.WriteLine("File size threshold enabled, reporting files above " + size / 1000 + " MB");
             }
 
             // Set up playlist output.
@@ -141,7 +141,7 @@ namespace ArtSizeReader {
         /// </summary>
         /// <param name="size">The size in kilobytes.</param>
         /// <returns>The instance of the current object.</returns>
-        public IArtReader WithSize(int size) {
+        public IArtReader WithSize(double size) {
             this.size = size;
             return this;
         }
@@ -166,7 +166,7 @@ namespace ArtSizeReader {
         /// <param name="file">The file to check.</param>
         private void AnalyzeFile(string file) {
             UltraID3 tags = new UltraID3();
-            Boolean err = false;
+            String message = String.Empty;
             // Reader tags from file and get the content of the cover tag
             tags.Read(file);
             ID3FrameCollection covers = tags.ID3v2Tag.Frames.GetFrames(CommonMultipleInstanceID3v2FrameTypes.Picture);
@@ -174,30 +174,27 @@ namespace ArtSizeReader {
             // Check if there actually is a cover.
             if (covers.Count > 0) {
                 ID3v2PictureFrame cover = (ID3v2PictureFrame)covers[0];
-                long imagesize = GetImageSize(cover.Picture);
-                if (imagesize > this.size) {
-                    // Little hack to properly format the Console output if not written to logfile.
-                    if (!isLoggingEnabled) Console.Write("\r");
-                    Console.WriteLine("Checked Artwork file size for file " + file + " is larger than limit: " + imagesize + " KByte");
-                    err = true;
+
+                if (hasSizeLimit) {
+                    double imagesize = GetImageSize(cover.Picture);
+                    if (imagesize > this.size / 1000) {
+                        message += "Artwork filesize is " + imagesize + " MByte. ";
+                    }
                 }
                 if (!IsWellFormedImage(cover.Picture, hasRatio)) {
-                    // Little hack to properly format the Console output if not written to logfile.
-                    if (!isLoggingEnabled) Console.Write("\r");
-                    Console.WriteLine("Checked Artwork size for file " + file + " is below limit or has wrong ratio: " + cover.Picture.Size.Width + "x" + cover.Picture.Size.Height);
-                    err = true;
-                }
-
-                if (err && isPlaylistEnabled) {
-                    playlist.Write(file);
+                    message += "Artwork image size is " + cover.Picture.Size.Width + "x" + cover.Picture.Size.Height;
                 }
             }
 
             // No covers found.
             else {
-                // Little hack to properly format the Console output if not written to logfile.
+                message += "No cover found.";
+            }
+
+            // If one of the checks failed, write it to console.
+            if (!message.Equals(String.Empty)) {
                 if (!isLoggingEnabled) Console.Write("\r");
-                Console.WriteLine("No cover found for: " + file);
+                Console.WriteLine(file + ": " + message);
                 if (isPlaylistEnabled) playlist.Write(file);
             }
         }
@@ -302,16 +299,20 @@ namespace ArtSizeReader {
             else return true;
         }
 
-        private long GetImageSize(Bitmap image) {
+        /// <summary>
+        /// Calculates the file size of an image.
+        /// </summary>
+        /// <param name="image">The image to check.</param>
+        /// <returns>The file size in bytes.</returns>
+
+        private double GetImageSize(Bitmap image) {
             using (var ms = new MemoryStream(image.Size.Width * image.Size.Height * 4)) { // 4 is probably way too much
                 image.Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
-                if (ms.Length / 1048 > this.size) {
-                    return ms.Length / 1048;
-                }
-                //TODO bah
-                else return 0;
+
+                return ((double)(ms.Length >> 10)) / 1000;
             }
         }
+
 
         /// <summary>
         /// Parses the resolution from a WIDTHxHEIGHT string into an array.
