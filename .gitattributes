@@ -1,4 +1,5 @@
 * text=auto !eol
+.nuget/packages.config -text
 /ArtSizeReader svn_global_002dignores=bin%0Aobj%0A
 /ArtSizeReader.sln -text
 /ArtSizeReader.v11.suo -text

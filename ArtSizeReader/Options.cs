@@ -26,6 +26,10 @@ namespace ArtSizeReader {
           HelpText = "Additionally restrict the cover size to a 1:1 aspect ratio. If enabled e.g 400x350 will cause an error while 400x400 won't.")]
         public bool Ratio { get; set; }
 
+        [Option('s', "size",
+          HelpText = "Cover file sizes below this threshold (in kilobytes) will be ignored. Useful to check for large image files. Format example: 1000 (equals 1 Megabyte)")]
+        public int Size { get; set; }
+
         [HelpOption]
         public string GetUsage() {
             return HelpText.AutoBuild(this, (HelpText current) => HelpText.DefaultParsingErrorsHandler(this, current));

@@ -6,13 +6,16 @@ using System.Linq;
 using HundredMilesSoftware.UltraID3Lib;
 
 namespace ArtSizeReader {
+
     public class ArtReader : IArtReader {
+
         // Preserve standard Console output
         private static StreamWriter defaultConsoleOutput = new StreamWriter(Console.OpenStandardOutput());
 
+        private bool hasRatio = false;
+        private bool hasSize = false;
         private bool isLoggingEnabled = false;
         private bool isPlaylistEnabled = false;
-        private bool hasRatio = false;
         private string logfilePath;
         private StreamWriter logfileWriter = defaultConsoleOutput;
         private Playlist playlist;
@@ -20,6 +23,7 @@ namespace ArtSizeReader {
         private uint[] resolution;
         private string targetPath;
         private string threshold;
+        private int size;
 
         /// <summary>
         /// Builds an ArtReader object from the specified parameters and checks if they are valid.
@@ -51,6 +55,11 @@ namespace ArtSizeReader {
                 Console.WriteLine("Checking for proper ratio is enabled.");
             }
 
+            if (this.size != null) {
+                hasSize = true;
+                Console.WriteLine("File size threshold enabled, reporting files above " + size + " KB");
+            }
+
             // Set up playlist output.
             if (this.playlistPath != null) {
                 if (InitialisePlaylist()) {
@@ -75,9 +84,11 @@ namespace ArtSizeReader {
 
             // Target is a directory
             else if (Directory.Exists(targetPath)) {
-                foreach (string file in ReadFiles(targetPath)) {
-                    AnalyzeFile(file);
-                }
+                // Search for files in the directory, but filter out inaccessible folders before.
+                foreach (string dir in GetDirectories(targetPath))
+                    foreach (string file in ReadFiles(dir)) {
+                        AnalyzeFile(file);
+                    }
                 return true;
             }
             return false;
@@ -120,8 +131,18 @@ namespace ArtSizeReader {
         /// </summary>
         /// <param name="threshold">The threshold.</param>
         /// <returns>The instance of the current object.</returns>
-        public IArtReader WithThreshold(string threshold) {
-            this.threshold = threshold;
+        public IArtReader WithRatio(bool hasRatio) {
+            this.hasRatio = hasRatio;
+            return this;
+        }
+
+        /// <summary>
+        /// Specifies the file size threshold.
+        /// </summary>
+        /// <param name="size">The size in kilobytes.</param>
+        /// <returns>The instance of the current object.</returns>
+        public IArtReader WithSize(int size) {
+            this.size = size;
             return this;
         }
 
@@ -130,10 +151,11 @@ namespace ArtSizeReader {
         /// </summary>
         /// <param name="threshold">The threshold.</param>
         /// <returns>The instance of the current object.</returns>
-        public IArtReader WithRatio(bool hasRatio) {
-            this.hasRatio = hasRatio;
+        public IArtReader WithThreshold(string threshold) {
+            this.threshold = threshold;
             return this;
         }
+
         #endregion Interface allocation methods
 
         #region Private methods
@@ -144,7 +166,7 @@ namespace ArtSizeReader {
         /// <param name="file">The file to check.</param>
         private void AnalyzeFile(string file) {
             UltraID3 tags = new UltraID3();
-
+            Boolean err = false;
             // Reader tags from file and get the content of the cover tag
             tags.Read(file);
             ID3FrameCollection covers = tags.ID3v2Tag.Frames.GetFrames(CommonMultipleInstanceID3v2FrameTypes.Picture);
@@ -152,12 +174,22 @@ namespace ArtSizeReader {
             // Check if there actually is a cover.
             if (covers.Count > 0) {
                 ID3v2PictureFrame cover = (ID3v2PictureFrame)covers[0];
-                if (!CheckSize(cover.Picture, hasRatio)) {
+                long imagesize = GetImageSize(cover.Picture);
+                if (imagesize > this.size) {
+                    // Little hack to properly format the Console output if not written to logfile.
+                    if (!isLoggingEnabled) Console.Write("\r");
+                    Console.WriteLine("Checked Artwork file size for file " + file + " is larger than limit: " + imagesize + " KByte");
+                    err = true;
+                }
+                if (!IsWellFormedImage(cover.Picture, hasRatio)) {
                     // Little hack to properly format the Console output if not written to logfile.
                     if (!isLoggingEnabled) Console.Write("\r");
                     Console.WriteLine("Checked Artwork size for file " + file + " is below limit or has wrong ratio: " + cover.Picture.Size.Width + "x" + cover.Picture.Size.Height);
-                    if (isPlaylistEnabled) playlist.Write(file);
+                    err = true;
+                }
 
+                if (err && isPlaylistEnabled) {
+                    playlist.Write(file);
                 }
             }
 
@@ -167,26 +199,29 @@ namespace ArtSizeReader {
                 if (!isLoggingEnabled) Console.Write("\r");
                 Console.WriteLine("No cover found for: " + file);
                 if (isPlaylistEnabled) playlist.Write(file);
-
             }
         }
 
         /// <summary>
-        /// Checks whether the size of an image is below the global threshold.
+        /// Gets all subdirectories of a given folder and filters out inaccessible directories.
         /// </summary>
-        /// <param name="image">The image to check.</param>
-        /// <returns>false if the image is below the limit, true if not.</returns>
-        private bool CheckSize(Bitmap image, bool hasRatio) {
-            if (image.Size.Width < resolution[0] || image.Size.Height < resolution[1]) {
-                return false;
+        /// <param name="directory">The directory to analyse.</param>
+        /// <returns>An enumerator that returns one subdirectory at a time.</returns>
+        private IEnumerable<string> GetDirectories(string directory) {
+            IEnumerable<string> subDirectories = null;
+            try {
+                subDirectories = Directory.EnumerateDirectories(directory, "*.*", SearchOption.TopDirectoryOnly);
             }
-            if (hasRatio) {
-                if (image.Size.Width != image.Size.Height) {
-                    return false;
+            catch (UnauthorizedAccessException) {
+                /* Directory can't be accessed, most likely because it's a system directory.
+                 * We can't do anything about it, so just ignore it and move on. */
+            }
+
+            if (subDirectories != null) {
+                foreach (string subDirectory in subDirectories) {
+                    yield return subDirectory;
                 }
-                else return true;
             }
-            else return true;
         }
 
         /// <summary>
@@ -213,7 +248,6 @@ namespace ArtSizeReader {
             }
         }
 
-
         /// <summary>
         /// Manages the initialisation of the playlist.
         /// </summary>
@@ -234,6 +268,7 @@ namespace ArtSizeReader {
                 return false;
             }
         }
+
         /// <summary>
         /// Checks if the given path is a valid Windows path.
         /// </summary>
@@ -245,6 +280,37 @@ namespace ArtSizeReader {
                 return false;
             }
             else return true;
+        }
+
+        /// <summary>
+        /// Checks whether the size of an image is below the global threshold.
+        /// </summary>
+        /// <param name="image">The image to check.</param>
+        /// <param name="withRatio">Whether to additionally check if the image has a 1:1 aspect ratio.</param>
+        /// <returns>false if the image is below the limit or has no 1:1 ratio, true if not.</returns>
+        private bool IsWellFormedImage(Bitmap image, bool withRatio) {
+            if (image.Size.Width < resolution[0] || image.Size.Height < resolution[1]) {
+                return false;
+            }
+            if (withRatio) {
+                if (image.Size.Width != image.Size.Height) {
+                    return false;
+                }
+                else return true;
+            }
+
+            else return true;
+        }
+
+        private long GetImageSize(Bitmap image) {
+            using (var ms = new MemoryStream(image.Size.Width * image.Size.Height * 4)) { // 4 is probably way too much
+                image.Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
+                if (ms.Length / 1048 > this.size) {
+                    return ms.Length / 1048;
+                }
+                //TODO bah
+                else return 0;
+            }
         }
 
         /// <summary>
@@ -275,7 +341,7 @@ namespace ArtSizeReader {
 
             // Get all files in the directory.
             try {
-                musicFiles = Directory.EnumerateFiles(directory, "*.mp3", SearchOption.AllDirectories);
+                musicFiles = Directory.GetFiles(directory, "*.mp3", SearchOption.AllDirectories);
                 numOfFiles = musicFiles.Count();
             }
             catch (UnauthorizedAccessException uae) {
@@ -303,6 +369,7 @@ namespace ArtSizeReader {
                 yield return currentFile;
             }
         }
+
         #endregion Private methods
     }
 }

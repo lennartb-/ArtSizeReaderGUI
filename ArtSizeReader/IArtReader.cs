@@ -15,5 +15,7 @@ namespace ArtSizeReader {
         IArtReader WithPlaylist(string playlist);
 
         IArtReader WithRatio(bool hasRatio);
+
+        IArtReader WithSize(int size);
     }
 }

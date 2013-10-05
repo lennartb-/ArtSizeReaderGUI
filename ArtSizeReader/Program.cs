@@ -6,8 +6,8 @@ namespace ArtSizeReader {
     public class Program {
         private static void Main(string[] args) {
             // Translates Exceptions and other messages to english.
-            System.Threading.Thread.CurrentThread.CurrentUICulture = new System.Globalization.CultureInfo("en-us");
-            System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = new System.Globalization.CultureInfo("en-us");
+            System.Threading.Thread.CurrentThread.CurrentUICulture = new System.Globalization.CultureInfo("en-US");
+            //System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = new System.Globalization.CultureInfo("en-US");
 
             // Install global unhandled exception trapper
             AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionTrapper;
@@ -16,9 +16,9 @@ namespace ArtSizeReader {
                 Console.WriteLine("\nFinished!");
             }
             else {
-                Console.WriteLine("\nFinished with errors.");
+                Console.WriteLine("\nFinished with errors!");
                 // Wait for user input/keep cmd window open.
-                Console.ReadLine();
+                //Console.ReadLine();
             }
 
             // Wait for user input/keep cmd window open.
@@ -55,6 +55,11 @@ namespace ArtSizeReader {
                 // Check if the covers should be checked for a 1:1 ratio.
                 if (options.Ratio) {
                     ar.WithRatio(true);
+                }
+
+                // Check if the covers should be checked for a 1:1 ratio.
+                if (options.Size != null) {
+                    ar.WithSize(options.Size);
                 }
 
                 try {
