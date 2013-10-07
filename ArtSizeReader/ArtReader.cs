@@ -9,6 +9,7 @@ namespace ArtSizeReader {
 
     public class ArtReader : IArtReader {
 
+
         // Preserve standard Console output
         private static StreamWriter defaultConsoleOutput = new StreamWriter(Console.OpenStandardOutput());
 
@@ -23,7 +24,7 @@ namespace ArtSizeReader {
         private uint[] resolution;
         private string targetPath;
         private string threshold;
-        private double size;
+        private double? size;
 
         /// <summary>
         /// Builds an ArtReader object from the specified parameters and checks if they are valid.
@@ -32,44 +33,62 @@ namespace ArtSizeReader {
         /// <exception cref="ArgumentException">Thrown when any of the supplied arguments are invalid.</exception>
         public ArtReader Create() {
             // Set up logfile.
-            if (this.logfilePath != null) {
-                if (InitialiseLogging()) {
-                    Console.WriteLine("Logging enabled, writing log to: " + logfilePath);
-                }
-                else throw new ArgumentException("Invalid logfile path: " + logfilePath);
-            }
+            ValidateLogfile(this.logfilePath);
 
             // Check if target path is valid.
-            if (IsPathValid(targetPath)) {
-                Console.WriteLine("Analyzing file(s) in " + targetPath);
-            }
-            else throw new ArgumentException("Invalid target path: " + targetPath);
+            ValidatePath(this.targetPath);
 
             // Check and Parse resolution.
-            if (this.threshold != null && ParseResolution()) {
-                Console.WriteLine("Threshold enabled, selected value: " + resolution[0] + "x" + resolution[1]);
-            }
-            else throw new ArgumentException("Invalid resolution: " + threshold);
+            ValidateResolution(this.threshold);
+
 
             if (hasRatio) {
                 Console.WriteLine("Checking for proper ratio is enabled.");
             }
 
-            if (this.size != 0.0) {
+            if (size != null) {
                 hasSizeLimit = true;
                 Console.WriteLine("File size threshold enabled, reporting files above " + size / 1000 + " MB");
             }
 
             // Set up playlist output.
-            if (this.playlistPath != null) {
-                if (InitialisePlaylist()) {
-                    Console.WriteLine("Playlist output enabled, writing to: " + playlistPath);
-                }
-                else throw new ArgumentException("Invalid playlist path: " + playlistPath);
-            }
-
+            ValidatePlaylist(this.playlistPath);
             return this;
         }
+
+
+        private void ValidateResolution(string threshold) {
+            try {
+                resolution = threshold.Split('x').Select(uint.Parse).ToArray();
+                Console.WriteLine("Threshold enabled, selected value: " + resolution[0] + "x" + resolution[1]);
+            }
+            catch (FormatException fe) {
+                // Resolution is < 0 or doesn't fit into the uint Array
+                throw new ArgumentException("Can not parse resolution " + threshold + ", must be in format e.g.: 300x300", fe);
+
+            }
+        }
+
+        private void ValidatePath(string targetPath) {
+            if (Directory.Exists(targetPath) && !File.Exists(targetPath)) {
+                Console.WriteLine("Analyzing file(s) in " + targetPath);
+            }
+            else {
+                throw new ArgumentException("Invalid target path: " + targetPath);
+            }
+        }
+
+        private void ValidateLogfile(string logfilePath) {
+            if (logfilePath != null) {
+                if (InitialiseLogging(logfilePath)) {
+                    Console.WriteLine("Logging enabled, writing log to: " + logfilePath);
+                }
+                else {
+                    throw new ArgumentException("Invalid logfile path: " + logfilePath);
+                }
+            }
+        }
+
 
         /// <summary>
         /// Starts fetching the album art from the specified file or directory.
@@ -141,7 +160,7 @@ namespace ArtSizeReader {
         /// </summary>
         /// <param name="size">The size in kilobytes.</param>
         /// <returns>The instance of the current object.</returns>
-        public IArtReader WithSize(double size) {
+        public IArtReader WithSize(double? size) {
             this.size = size;
             return this;
         }
@@ -225,7 +244,7 @@ namespace ArtSizeReader {
         /// Manages the initialisation of the logfile.
         /// </summary>
         /// <returns>true if the path is valid, false when not.</returns>
-        private bool InitialiseLogging() {
+        private bool InitialiseLogging(string logfilePath) {
             try {
                 string fullLogfilePath = Path.GetFullPath(logfilePath);
                 bool validDir = Directory.Exists(Path.GetDirectoryName(fullLogfilePath));
@@ -249,35 +268,26 @@ namespace ArtSizeReader {
         /// Manages the initialisation of the playlist.
         /// </summary>
         /// <returns>true if the path to the playlist is valid, false when not.</returns>
-        private bool InitialisePlaylist() {
-            try {
-                string fullPlaylistPath = Path.GetFullPath(playlistPath);
-                bool validDir = Directory.Exists(Path.GetDirectoryName(fullPlaylistPath));
-                if (validDir) {
-                    isPlaylistEnabled = true;
-                    playlist = new Playlist(playlistPath);
-                    return true;
+        private void ValidatePlaylist(string playlistPath) {
+            if (playlistPath != null) {
+                try {
+                    string fullPlaylistPath = Path.GetFullPath(playlistPath);
+                    bool validDir = Directory.Exists(Path.GetDirectoryName(fullPlaylistPath));
+                    if (validDir) {
+                        isPlaylistEnabled = true;
+                        playlist = new Playlist(playlistPath);
+                        Console.WriteLine("Playlist enabled, writing to " + fullPlaylistPath);
+
+                    }
+                    else throw new ArgumentException("Invalid playlist path: " + playlistPath);
                 }
-                else return false;
-            }
-            catch (Exception e) {
-                Console.WriteLine("Could not create playlist: " + e.Message + "(" + e.GetType().Name + ")");
-                return false;
+                catch (Exception e) {
+                    Console.WriteLine("Could not create playlist: " + e.Message + "(" + e.GetType().Name + ")");
+                    throw;
+                }
             }
         }
 
-        /// <summary>
-        /// Checks if the given path is a valid Windows path.
-        /// </summary>
-        /// <param name="targetPath">The path to check.</param>
-        /// <returns>true if the path is valid, false when not.</returns>
-        private bool IsPathValid(string targetPath) {
-            if (!Directory.Exists(targetPath) && !File.Exists(targetPath)) {
-                Console.WriteLine("Could not find target path: " + targetPath);
-                return false;
-            }
-            else return true;
-        }
 
         /// <summary>
         /// Checks whether the size of an image is below the global threshold.
@@ -313,23 +323,6 @@ namespace ArtSizeReader {
             }
         }
 
-
-        /// <summary>
-        /// Parses the resolution from a WIDTHxHEIGHT string into an array.
-        /// </summary>
-        /// <returns>true if the resolution is valid, false when not.</returns>
-        private bool ParseResolution() {
-            try {
-                resolution = threshold.Split('x').Select(uint.Parse).ToArray();
-                return true;
-            }
-            catch (FormatException fe) {
-                // Resolution is < 0 or doesn't fit into the uint Array
-                Console.WriteLine("Can not parse resolution, must be in format e.g.: 300x300");
-                Console.WriteLine(fe.Message);
-                return false;
-            }
-        }
 
         /// <summary>
         /// Enumerates the files in a certain directory and returns one file at a time.

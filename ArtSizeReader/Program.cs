@@ -4,6 +4,9 @@ using CommandLine;
 namespace ArtSizeReader {
 
     public class Program {
+
+        private const int UNCAUGHT_EXCEPTION = 5;
+
         private static void Main(string[] args) {
             // Translates Exceptions and other messages to english.
             System.Threading.Thread.CurrentThread.CurrentUICulture = new System.Globalization.CultureInfo("en-US");
@@ -58,8 +61,7 @@ namespace ArtSizeReader {
                 }
 
                 // Check if the covers should be checked for a 1:1 ratio.
-                if (options.Size != 0.0) {
-                    Console.WriteLine(options.Size);
+                if (options.Size != null) {
                     ar.WithSize(options.Size);
                 }
 
@@ -86,7 +88,7 @@ namespace ArtSizeReader {
             Console.WriteLine(e.ExceptionObject.ToString());
             Console.WriteLine("Can not continue, press any key to quit.");
             Console.ReadLine();
-            Environment.Exit(5);
+            Environment.Exit(UNCAUGHT_EXCEPTION);
         }
     }
 }
