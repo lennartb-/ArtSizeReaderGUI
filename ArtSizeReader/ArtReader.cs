@@ -30,26 +30,31 @@ namespace ArtSizeReader {
         /// <returns>An ArtReader objects with the desired input parameters.</returns>
         /// <exception cref="ArgumentException">Thrown when any of the supplied arguments are invalid.</exception>
         public ArtReader Create() {
-            // Set up logfile.
-            ValidateLogfile(this.logfilePath);
+            try {
+                // Set up logfile.
+                ValidateLogfile(this.logfilePath);
 
-            // Check if target path is valid.
-            ValidatePath(this.targetPath);
+                // Check if target path is valid.
+                ValidateTargetPath(this.targetPath);
 
-            // Check and Parse resolution.
-            ValidateResolution(this.threshold);
+                // Check and Parse resolution.
+                ValidateResolution(this.threshold);
 
-            if (hasRatio) {
-                Console.WriteLine("Checking for proper ratio is enabled.");
+                if (hasRatio) {
+                    Console.WriteLine("Checking for 1:1 ratio is enabled.");
+                }
+
+                if (size != null) {
+                    hasSizeLimit = true;
+                    Console.WriteLine("File size threshold enabled, reporting files above " + size / 1024 + " MB");
+                }
+
+                // Set up playlist output.
+                ValidatePlaylist(this.playlistPath);
             }
-
-            if (size != null) {
-                hasSizeLimit = true;
-                Console.WriteLine("File size threshold enabled, reporting files above " + size / 1024 + " MB");
+            catch (ArgumentException ae) {
+                throw;
             }
-
-            // Set up playlist output.
-            ValidatePlaylist(this.playlistPath);
 
             return this;
         }
@@ -301,6 +306,10 @@ namespace ArtSizeReader {
             }
         }
 
+        /// <summary>
+        /// Checks the logfile path and starts the initialisation of the logfile.
+        /// </summary>
+        /// <param name="logfilePath">The path to the logfile.</param>
         private void ValidateLogfile(string logfilePath) {
             if (logfilePath != null) {
                 if (InitialiseLogging(logfilePath)) {
@@ -309,15 +318,6 @@ namespace ArtSizeReader {
                 else {
                     throw new ArgumentException("Invalid logfile path: " + logfilePath);
                 }
-            }
-        }
-
-        private void ValidatePath(string targetPath) {
-            if (Directory.Exists(targetPath) && !File.Exists(targetPath)) {
-                Console.WriteLine("Analyzing file(s) in " + targetPath);
-            }
-            else {
-                throw new ArgumentException("Invalid target path: " + targetPath);
             }
         }
 
@@ -344,6 +344,10 @@ namespace ArtSizeReader {
             }
         }
 
+        /// <summary>
+        /// Checks if the resolution string is valid.
+        /// </summary>
+        /// <param name="threshold">The string with the resolution.</param>
         private void ValidateResolution(string threshold) {
             try {
                 resolution = threshold.Split('x').Select(uint.Parse).ToArray();
@@ -352,6 +356,19 @@ namespace ArtSizeReader {
             catch (FormatException fe) {
                 // Resolution is < 0 or doesn't fit into the uint Array
                 throw new ArgumentException("Can not parse resolution " + threshold + ", must be in format e.g.: 300x300", fe);
+            }
+        }
+
+        /// <summary>
+        /// Checks if the targetpath is valid and exists.
+        /// </summary>
+        /// <param name="targetPath">The path to the target directory.</param>
+        private void ValidateTargetPath(string targetPath) {
+            if (Directory.Exists(targetPath) && !File.Exists(targetPath)) {
+                Console.WriteLine("Analyzing file(s) in " + targetPath);
+            }
+            else {
+                throw new ArgumentException("Invalid target path: " + targetPath);
             }
         }
 
