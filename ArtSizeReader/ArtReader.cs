@@ -16,14 +16,18 @@ namespace ArtSizeReader {
         private bool hasSizeLimit = false;
         private bool isLoggingEnabled = false;
         private bool isPlaylistEnabled = false;
+        private bool hasMaxThreshold = false;
         private string logfilePath;
         private StreamWriter logfileWriter = defaultConsoleOutput;
         private Playlist playlist;
         private string playlistPath;
         private uint[] resolution;
+        private uint[] maxResolution;
         private double? size;
         private string targetPath;
         private string threshold;
+        private string maxThreshold;
+
         /// <summary>
         /// Builds an ArtReader object from the specified parameters and checks if they are valid.
         /// </summary>
@@ -38,21 +42,24 @@ namespace ArtSizeReader {
                 ValidateTargetPath(this.targetPath);
 
                 // Check and Parse resolution.
-                ValidateResolution(this.threshold);
+                ValidateResolution(this.threshold, false);
 
                 if (hasRatio) {
                     Console.WriteLine("Checking for 1:1 ratio is enabled.");
                 }
 
-                if (size != null) {
-                    hasSizeLimit = true;
+                if (hasSizeLimit) {
                     Console.WriteLine("File size threshold enabled, reporting files above " + size / 1024 + " MB");
+                }
+
+                if (hasMaxThreshold) {
+                    ValidateResolution(this.maxThreshold, true);
                 }
 
                 // Set up playlist output.
                 ValidatePlaylist(this.playlistPath);
             }
-            catch (ArgumentException ae) {
+            catch (ArgumentException) {
                 throw;
             }
 
@@ -101,6 +108,7 @@ namespace ArtSizeReader {
         /// <returns>The instance of the current object.</returns>
         public IArtReader WithLogfile(string logfile) {
             this.logfilePath = logfile;
+            isLoggingEnabled = true;
             return this;
         }
 
@@ -111,6 +119,7 @@ namespace ArtSizeReader {
         /// <returns>The instance of the current object.</returns>
         public IArtReader WithPlaylist(string playlist) {
             this.playlistPath = playlist;
+            isPlaylistEnabled = true;
             return this;
         }
 
@@ -131,6 +140,7 @@ namespace ArtSizeReader {
         /// <returns>The instance of the current object.</returns>
         public IArtReader WithSize(double? size) {
             this.size = size;
+            this.hasSizeLimit = true;
             return this;
         }
 
@@ -141,6 +151,17 @@ namespace ArtSizeReader {
         /// <returns>The instance of the current object.</returns>
         public IArtReader WithThreshold(string threshold) {
             this.threshold = threshold;
+            return this;
+        }
+
+        /// <summary>
+        /// Specifies the art size threshold in the format WIDHTxHEIGHT.
+        /// </summary>
+        /// <param name="threshold">The threshold.</param>
+        /// <returns>The instance of the current object.</returns>
+        public IArtReader WithMaxThreshold(string maxThreshold) {
+            this.maxThreshold = maxThreshold;
+            this.hasMaxThreshold = true;
             return this;
         }
 
@@ -169,7 +190,7 @@ namespace ArtSizeReader {
                         message += "Artwork filesize is " + imagesize + " MByte. ";
                     }
                 }
-                if (!IsWellFormedImage(cover.Picture, hasRatio)) {
+                if (!IsWellFormedImage(cover.Picture)) {
                     message += "Artwork image size is " + cover.Picture.Size.Width + "x" + cover.Picture.Size.Height;
                 }
             }
@@ -235,7 +256,6 @@ namespace ArtSizeReader {
                     logfileWriter = new StreamWriter(fs);
                     logfileWriter.AutoFlush = true;
                     Console.SetOut(logfileWriter);
-                    isLoggingEnabled = true;
                     return true;
                 }
                 else return false;
@@ -252,18 +272,33 @@ namespace ArtSizeReader {
         /// <param name="image">The image to check.</param>
         /// <param name="withRatio">Whether to additionally check if the image has a 1:1 aspect ratio.</param>
         /// <returns>false if the image is below the limit or has no 1:1 ratio, true if not.</returns>
-        private bool IsWellFormedImage(Bitmap image, bool withRatio) {
+        private bool IsWellFormedImage(Bitmap image) {
+
+            // Check if image is below (minimum) threshold.
             if (image.Size.Width < resolution[0] || image.Size.Height < resolution[1]) {
                 return false;
             }
-            if (withRatio) {
+
+            // Check if image is above maximum threshold.
+            if (hasMaxThreshold) {
+                if (image.Size.Width > maxResolution[0] || image.Size.Height > maxResolution[1]) {
+                    return false;
+                }
+            }
+
+            // Check for 1:1 ratio.
+            if (hasRatio) {
                 if (image.Size.Width != image.Size.Height) {
                     return false;
                 }
-                else return true;
             }
 
-            else return true;
+            return true;
+        }
+
+        private int countFiles(string dir) {
+
+            return Directory.GetFiles(dir).Length;
         }
 
         /// <summary>
@@ -331,7 +366,6 @@ namespace ArtSizeReader {
                     string fullPlaylistPath = Path.GetFullPath(playlistPath);
                     bool validDir = Directory.Exists(Path.GetDirectoryName(fullPlaylistPath));
                     if (validDir) {
-                        isPlaylistEnabled = true;
                         playlist = new Playlist(playlistPath);
                         Console.WriteLine("Playlist enabled, writing to " + fullPlaylistPath);
                     }
@@ -348,10 +382,18 @@ namespace ArtSizeReader {
         /// Checks if the resolution string is valid.
         /// </summary>
         /// <param name="threshold">The string with the resolution.</param>
-        private void ValidateResolution(string threshold) {
+        /// <param name="isMaxThreshold">true if the parameter is the maximum threshold string, false if it's the normal resolution.</param>
+        private void ValidateResolution(string threshold, bool isMaxThreshold) {
             try {
-                resolution = threshold.Split('x').Select(uint.Parse).ToArray();
-                Console.WriteLine("Threshold enabled, selected value: " + resolution[0] + "x" + resolution[1]);
+                if (isMaxThreshold) {
+                    maxResolution = threshold.Split('x').Select(uint.Parse).ToArray();
+                    Console.WriteLine("Maximum threshold enabled, selected value: " + maxResolution[0] + "x" + maxResolution[1]);
+                }
+                else {
+                    resolution = threshold.Split('x').Select(uint.Parse).ToArray();
+                    Console.WriteLine("Threshold enabled, selected value: " + resolution[0] + "x" + resolution[1]);
+                }
+
             }
             catch (FormatException fe) {
                 // Resolution is < 0 or doesn't fit into the uint Array

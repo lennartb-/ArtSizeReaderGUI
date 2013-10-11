@@ -17,5 +17,7 @@ namespace ArtSizeReader {
         IArtReader WithRatio(bool hasRatio);
 
         IArtReader WithSize(double? size);
+
+        IArtReader WithMaxThreshold(string resolution);
     }
 }

@@ -30,6 +30,10 @@ namespace ArtSizeReader {
           HelpText = "Cover file sizes below this threshold (in kilobytes) will be ignored. Useful to check for large image files. Format example: 1000 (equals 1 Megabyte). Use a negative value to print files sizes for all images.")]
         public double? Size { get; set; }
 
+        [Option('m', "max-threshold",
+          HelpText = "Can be used together with -t to define a maximum upper limit for covers, i.e. covers larger than this resolution will be reported. Format example: 1000x1000.")]
+        public string MaxThreshold { get; set; }
+
         [HelpOption]
         public string GetUsage() {
             return HelpText.AutoBuild(this, (HelpText current) => HelpText.DefaultParsingErrorsHandler(this, current));

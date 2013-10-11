@@ -35,7 +35,7 @@ namespace ArtSizeReader {
             if (Parser.Default.ParseArguments(args, options)) {
                 ArtReader ar = new ArtReader();
 
-                // Check if we either a target
+                // Check if we have a target.
                 if (options.InputFile != null) {
                     ar.ToRead(options.InputFile);
                 }
@@ -50,7 +50,7 @@ namespace ArtSizeReader {
                     ar.WithLogfile(options.Logfile);
                 }
 
-                // Check if output will be logged to file.
+                // Check if output will be logged to playlist.
                 if (options.Playlist != null) {
                     ar.WithPlaylist(options.Playlist);
                 }
@@ -60,9 +60,14 @@ namespace ArtSizeReader {
                     ar.WithRatio(true);
                 }
 
-                // Check if the covers should be checked for a 1:1 ratio.
+                // Check if a maximum file size is set.
                 if (options.Size != null) {
                     ar.WithSize(options.Size);
+                }
+
+                // Check if the have a maximum threshold.
+                if (options.MaxThreshold != null) {
+                    ar.WithMaxThreshold(options.MaxThreshold);
                 }
 
                 try {
