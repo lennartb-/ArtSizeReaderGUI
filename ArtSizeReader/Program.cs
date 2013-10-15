@@ -1,10 +1,10 @@
 ﻿using System;
+using System.Reflection;
 using CommandLine;
 
 namespace ArtSizeReader {
 
     public class Program {
-
         private const int UNCAUGHT_EXCEPTION = 5;
 
         private static void Main(string[] args) {
@@ -14,6 +14,7 @@ namespace ArtSizeReader {
 
             // Install global unhandled exception trapper
             AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionTrapper;
+            AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(CurrentDomain_AssemblyResolve);
 
             if (ParseOptions(args)) {
                 Console.WriteLine("\nFinished!");
@@ -83,12 +84,51 @@ namespace ArtSizeReader {
             return false;
         }
 
+
+
+        /// <summary>
+        /// Event is raised when CLR is not able to find referenced assemblies. Source: http://sanganakauthority.blogspot.co.uk/2012/03/creating-single-exe-that-depends-on.html
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="args"></param>
+        /// <returns> Assembly to be loaded from embeded resource.</returns>
+        static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args) {
+            //This handler is called only when the common language runtime tries to bind to the assembly and fails.
+            //Retrieve the list of referenced assemblies in an array of AssemblyName.
+            Assembly objExecutingAssemblies;
+            Byte[] assemblyData = null;
+
+            objExecutingAssemblies = Assembly.GetExecutingAssembly();
+            AssemblyName[] arrReferencedAssmbNames = objExecutingAssemblies.GetReferencedAssemblies();
+
+            //Loop through the array of referenced assembly names.
+            foreach (AssemblyName strAssmbName in arrReferencedAssmbNames) {
+                //Check for the assembly names that have raised the "AssemblyResolve" event.
+                if (strAssmbName.FullName.Substring(0, strAssmbName.FullName.IndexOf(",")) == args.Name.Substring(0, args.Name.IndexOf(","))) {
+                    //Build the path of the assembly from where it has to be loaded.                                               
+
+                    //Console.WriteLine(args.Name.Substring(0, args.Name.IndexOf(",")) + ".dll");
+                    //Console.WriteLine("GHeatReducer." + new AssemblyName(args.Name).Name + ".dll");
+
+                    //GHeatReducer.dll. - this name is retrievd from ILDasm tool and by opening GHeatReducer.exe in the ILDasm tool.
+                    // In ILDASM tool select name rpesent against “.mresource” to write in GetManifestResourceStream method. 
+                    // “GHeatReducer” is the name of namespace and “dll” is the name of folder where DLL files to be referenced is present as shown in above screenshot.
+                    var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("ArtSizeReader." + new AssemblyName(args.Name).Name + ".dll");
+
+                    assemblyData = new Byte[stream.Length];
+                    stream.Read(assemblyData, 0, assemblyData.Length);
+                    break;
+                }
+            }
+            //Return the loaded assembly.
+            return Assembly.Load(assemblyData);
+        }
+
         /// <summary>
         /// Gracefully handle any unforseen exceptions.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-
         private static void UnhandledExceptionTrapper(object sender, UnhandledExceptionEventArgs e) {
             Console.WriteLine(e.ExceptionObject.ToString());
             Console.WriteLine("Can not continue, press any key to quit.");

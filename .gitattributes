@@ -7,6 +7,7 @@ ArtSizeReader/App.config -text
 ArtSizeReader/ArtReader.cs -text
 ArtSizeReader/ArtSizeReader.csproj -text
 ArtSizeReader/ArtSizeReader.csproj.user -text
+ArtSizeReader/CommandLine.dll -text
 ArtSizeReader/IArtReader.cs -text
 ArtSizeReader/License.txt -text
 ArtSizeReader/Options.cs -text
@@ -15,6 +16,7 @@ ArtSizeReader/Program.cs -text
 ArtSizeReader/Properties/AssemblyInfo.cs -text
 ArtSizeReader/Settings.StyleCop -text
 ArtSizeReader/StyleCop.Cache -text
+ArtSizeReader/UltraID3Lib.dll -text
 ArtSizeReader/lib/UltraID3Lib.dll -text
 ArtSizeReader/lib/UltraID3Lib.xml -text
 ArtSizeReader/packages.config -text
