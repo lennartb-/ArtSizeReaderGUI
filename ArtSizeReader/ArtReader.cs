@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -49,7 +50,7 @@ namespace ArtSizeReader {
                 }
 
                 if (hasSizeLimit) {
-                    Console.WriteLine("File size threshold enabled, reporting files above " + size / 1024 + " MB");
+                    Console.WriteLine("File size threshold enabled, reporting files above " + size + " KB");
                 }
 
                 if (hasMaxThreshold) {
@@ -71,19 +72,36 @@ namespace ArtSizeReader {
         /// </summary>
         /// <returns>True if analysing succeeded, false if the file or path could not be found.</returns>
         public bool GetAlbumArt() {
+#if DEBUG
+            Console.WriteLine("In GetAlbumArt()");
+            Console.WriteLine("Target Path is: " + targetPath);
+#endif
             // Target is a single file
             if (File.Exists(targetPath)) {
+#if DEBUG
+                Console.WriteLine(targetPath + " is a file");
+#endif
                 AnalyzeFile(targetPath);
                 return true;
             }
 
             // Target is a directory
             else if (Directory.Exists(targetPath)) {
+#if DEBUG
+                Console.WriteLine(targetPath + " is a directory");
+#endif
                 // Search for files in the directory, but filter out inaccessible folders before.
-                foreach (string dir in GetAccessibleDirectories(targetPath))
+                var accessibleDirectories = GetAccessibleDirectories(targetPath);
+                int numOfOverallFiles = countFiles(accessibleDirectories);
+                Console.WriteLine("Overall: " + numOfOverallFiles);
+                foreach (string dir in accessibleDirectories) {
+#if DEBUG
+                    Console.WriteLine("Currently in " + dir);
+#endif
                     foreach (string file in ReadFiles(dir)) {
                         AnalyzeFile(file);
                     }
+                }
                 return true;
             }
             return false;
@@ -174,6 +192,9 @@ namespace ArtSizeReader {
         /// </summary>
         /// <param name="file">The file to check.</param>
         private void AnalyzeFile(string file) {
+#if DEBUG
+            Console.WriteLine("Analyzing file " + file);
+#endif
             UltraID3 tags = new UltraID3();
             String message = String.Empty;
             // Reader tags from file and get the content of the cover tag
@@ -183,6 +204,9 @@ namespace ArtSizeReader {
             // Check if there actually is a cover.
             if (covers.Count > 0) {
                 ID3v2PictureFrame cover = (ID3v2PictureFrame)covers[0];
+#if DEBUG
+                Console.WriteLine("Found a cover for " + file);
+#endif
 
                 if (hasSizeLimit) {
                     double imagesize = GetImageSize(cover.Picture);
@@ -199,6 +223,10 @@ namespace ArtSizeReader {
             else {
                 message += "No cover found.";
             }
+
+#if DEBUG
+            Console.WriteLine("Message: " + message);
+#endif
 
             // If one of the checks failed, write it to console.
             if (!message.Equals(String.Empty)) {
@@ -218,16 +246,25 @@ namespace ArtSizeReader {
             try {
                 subDirectories = Directory.EnumerateDirectories(directory, "*.*", SearchOption.TopDirectoryOnly);
             }
-            catch (UnauthorizedAccessException) {
+            catch (UnauthorizedAccessException uae) {
                 /* Directory can't be accessed, most likely because it's a system directory.
                  * We can't do anything about it, so just ignore it and move on. */
+
+#if DEBUG
+                Console.WriteLine("Unauthorized Access Exception while checking for accessible Directories" + uae.Message);
+#endif
             }
 
-            if (subDirectories != null) {
+            if (subDirectories.Any()) {
                 foreach (string subDirectory in subDirectories) {
                     yield return subDirectory;
                 }
             }
+            // Possibly no subdirectories in here
+            else {
+                yield return directory;
+            }
+
         }
 
         /// <summary>
@@ -296,9 +333,14 @@ namespace ArtSizeReader {
             return true;
         }
 
-        private int countFiles(string dir) {
+        private int countFiles(IEnumerable<string> dirs) {
+            Stopwatch sw = new Stopwatch();
 
-            return Directory.GetFiles(dir).Length;
+            int num = 0;
+            foreach (string dir in dirs) {
+                num += Directory.EnumerateFiles(dir, "*.mp3", SearchOption.AllDirectories).Count();
+            }
+            return num;
         }
 
         /// <summary>
@@ -310,10 +352,16 @@ namespace ArtSizeReader {
             IEnumerable<string> musicFiles;
             int numOfFiles;
 
+
+
             // Get all files in the directory.
             try {
                 musicFiles = Directory.GetFiles(directory, "*.mp3", SearchOption.AllDirectories);
                 numOfFiles = musicFiles.Count();
+#if DEBUG
+                Console.WriteLine("Current directory: " + directory);
+                Console.WriteLine("Number of MP3 Files: " + numOfFiles);
+#endif
             }
             catch (UnauthorizedAccessException uae) {
                 Console.WriteLine(uae.Message);
@@ -327,6 +375,9 @@ namespace ArtSizeReader {
             int i = 0;
             foreach (string currentFile in musicFiles) {
                 // If logging to file is enabled, print out the progress to console anyway.
+#if DEBUG
+                Console.WriteLine("Current file: " + currentFile);
+#endif
                 if (isLoggingEnabled) {
                     Console.SetOut(defaultConsoleOutput);
                     Console.Write("\r{0} of {1} ({2}%) finished.{3}", ++i, numOfFiles, ((float)i / (float)numOfFiles) * 100, new string(' ', 10));

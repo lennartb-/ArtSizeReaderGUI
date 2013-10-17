@@ -8,10 +8,11 @@ namespace ArtSizeReader {
         private const int UNCAUGHT_EXCEPTION = 5;
 
         private static void Main(string[] args) {
+#if DEBUG
             // Translates Exceptions and other messages to english.
             System.Threading.Thread.CurrentThread.CurrentUICulture = new System.Globalization.CultureInfo("en-US");
             //System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = new System.Globalization.CultureInfo("en-US");
-
+#endif
             // Install global unhandled exception trapper
             AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionTrapper;
             AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(CurrentDomain_AssemblyResolve);
@@ -24,9 +25,10 @@ namespace ArtSizeReader {
                 // Wait for user input/keep cmd window open.
                 //Console.ReadLine();
             }
-
+#if DEBUG
             // Wait for user input/keep cmd window open.
             Console.ReadLine();
+#endif
         }
 
         private static bool ParseOptions(string[] args) {
@@ -34,6 +36,9 @@ namespace ArtSizeReader {
             var options = new Options();
 
             if (Parser.Default.ParseArguments(args, options)) {
+#if DEBUG
+                Console.WriteLine("Creating new ASR object.");
+#endif
                 ArtReader ar = new ArtReader();
 
                 // Check if we have a target.
@@ -73,6 +78,9 @@ namespace ArtSizeReader {
 
                 try {
                     // Create object and start analyzing the files.
+#if DEBUG
+                    Console.WriteLine("Calling GetAlbumArt()");
+#endif
                     ar.Create().GetAlbumArt();
                     return true;
                 }
