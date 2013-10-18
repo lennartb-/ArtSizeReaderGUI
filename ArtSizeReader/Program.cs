@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using CommandLine;
+using CommandLine.Text;
 
 namespace ArtSizeReader {
 
@@ -33,13 +34,23 @@ namespace ArtSizeReader {
 
         private static bool ParseOptions(string[] args) {
             // Get command line parser
-            var options = new Options();
-
+            Options options = new Options();
             if (Parser.Default.ParseArguments(args, options)) {
-#if DEBUG
-                Console.WriteLine("Creating new ASR object.");
-#endif
-                ArtReader ar = new ArtReader();
+                ArtReader ar;
+
+                // If either one or both options are present, continue.
+                if (!(options.Size == null && options.Threshold == null)) {
+                    ar = new ArtReader();
+                }
+                // If neither of the options are present, we can't continue. Show the error and the helpscreen.
+                else {
+                    HelpText t = HelpText.AutoBuild(options, (HelpText current) => HelpText.DefaultParsingErrorsHandler(options, current));
+                    t.AdditionalNewLineAfterOption = true;
+                    t.AddPreOptionsLine("ERROR(S):\n  -t/--threshold and/or -s/--size are required.");
+                    Console.WriteLine(t.ToString());
+                    return false;
+                };
+
 
                 // Check if we have a target.
                 if (options.InputFile != null) {
@@ -78,9 +89,6 @@ namespace ArtSizeReader {
 
                 try {
                     // Create object and start analyzing the files.
-#if DEBUG
-                    Console.WriteLine("Calling GetAlbumArt()");
-#endif
                     ar.Create().GetAlbumArt();
                     return true;
                 }
