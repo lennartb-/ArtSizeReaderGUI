@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -11,9 +10,9 @@ namespace ArtSizeReader {
     public class ArtReader : IArtReader {
 
         // Preserve standard Console output
-        private static readonly StreamWriter defaultConsoleOutput = new StreamWriter(Console.OpenStandardOutput());
+        private static readonly StreamWriter DefaultConsoleOutput = new StreamWriter(Console.OpenStandardOutput());
 
-        private StreamWriter logfileWriter = defaultConsoleOutput;
+        private StreamWriter logfileWriter = DefaultConsoleOutput;
 
         // Optional parameter bools
         private bool hasRatio = false;
@@ -48,10 +47,10 @@ namespace ArtSizeReader {
         public ArtReader Create() {
             try {
                 // Set up logfile.
-                ValidateLogfile(this.logfilePath);
+                ValidateLogfile();
 
                 // Check if target path is valid.
-                ValidateTargetPath(this.targetPath);
+                ValidateTargetPath();
 
                 if (hasThreshold) {
                     ValidateResolution(this.threshold, false);
@@ -72,7 +71,7 @@ namespace ArtSizeReader {
                 }
 
                 // Set up playlist output.
-                ValidatePlaylist(this.playlistPath);
+                ValidatePlaylist();
             }
             catch (ArgumentException) {
                 throw;
@@ -96,7 +95,7 @@ namespace ArtSizeReader {
             // Target is a directory
             else if (Directory.Exists(targetPath)) {
                 // Search for files in the directory, but filter out inaccessible folders before.
-                var accessibleDirectories = GetDirs(targetPath, "*.*", SearchOption.AllDirectories);
+                var accessibleDirectories = SafeFileEnumerator.EnumerateDirectories(targetPath,"*.*",SearchOption.AllDirectories);
                 numberOfFiles = CountFiles(accessibleDirectories);
 
                 foreach (string dir in accessibleDirectories) {
@@ -146,7 +145,7 @@ namespace ArtSizeReader {
         /// <summary>
         /// Specifies the art size threshold in the format WIDHTxHEIGHT.
         /// </summary>
-        /// <param name="threshold">The threshold.</param>
+        /// <param name="hasRatio">The threshold.</param>
         /// <returns>The instance of the current object.</returns>
         public IArtReader WithRatio(bool hasRatio) {
             this.hasRatio = hasRatio;
@@ -197,7 +196,8 @@ namespace ArtSizeReader {
         private void AnalyzeFile(string file) {
 
             UltraID3 tags = new UltraID3();
-            String message = String.Empty;
+            string message = string.Empty;
+
             // Reader tags from file and get the content of the cover tag
             tags.Read(file);
             ID3FrameCollection covers = tags.ID3v2Tag.Frames.GetFrames(CommonMultipleInstanceID3v2FrameTypes.Picture);
@@ -223,60 +223,11 @@ namespace ArtSizeReader {
             }
 
             // If one of the checks failed, write it to console.
-            if (!message.Equals(String.Empty)) {
+            if (!message.Equals(string.Empty)) {
                 if (!isLoggingEnabled) Console.Write("\r");
                 Console.WriteLine(file + ": " + message);
                 if (isPlaylistEnabled) playlist.Write(file);
             }
-        }
-
-        /// <summary>
-        /// http://stackoverflow.com/a/13954763/368354
-        /// </summary>
-        /// <param name="parentDirectory"></param>
-        /// <param name="searchPattern"></param>
-        /// <param name="searchOpt"></param>
-        /// <returns></returns>
-        private IEnumerable<string> GetDirs(string parentDirectory, string searchPattern, SearchOption searchOpt) {
-            try {
-                var directories = Enumerable.Empty<string>();
-                if (searchOpt == SearchOption.AllDirectories) {
-                    directories = Directory.EnumerateDirectories(parentDirectory)
-                        .SelectMany(x => GetDirs(x, searchPattern, searchOpt));
-                }
-                return directories.Concat(Directory.EnumerateDirectories(parentDirectory, searchPattern));
-            }
-            catch (UnauthorizedAccessException ex) {
-                Console.WriteLine("!!!!!!!!!!!!!!" + ex.Message);
-                return Enumerable.Empty<string>();
-            }
-        }
-
-        /// <summary>
-        /// Gets all subdirectories of a given folder and filters out inaccessible directories.
-        /// </summary>
-        /// <param name="directory">The directory to analyse.</param>
-        /// <returns>An enumerator that returns one subdirectory at a time.</returns>
-        private IEnumerable<string> GetAccessibleDirectories(string directory) {
-            IEnumerable<string> subDirectories = null;
-            try {
-                subDirectories = Directory.EnumerateDirectories(directory, "*.*", SearchOption.AllDirectories);
-
-                // Adds the passed directory to the enumeration as well, since there also could be files not sorted into subfolders.
-                subDirectories = subDirectories.Concat(new[] { directory });
-
-            }
-            catch (UnauthorizedAccessException uae) {
-                /* Directory can't be accessed, most likely because it's a system directory.
-                 * We can't do anything about it, so just ignore it and move on. */
-                Console.WriteLine("UAE in " + uae.Message);
-            }
-
-            foreach (string subDirectory in subDirectories) {
-                yield return subDirectory;
-            }
-
-
         }
 
         /// <summary>
@@ -285,18 +236,18 @@ namespace ArtSizeReader {
         /// <param name="image">The image to check.</param>
         /// <returns>The file size in bytes.</returns>
         private double GetImageSize(Bitmap image) {
-            using (var ms = new MemoryStream(image.Size.Width * image.Size.Height * (Image.GetPixelFormatSize(image.PixelFormat)) / 8)) {
+            using (var ms = new MemoryStream(image.Size.Width * image.Size.Height * Image.GetPixelFormatSize(image.PixelFormat) / 8)) {
                 image.Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
 
-                return ((double)(ms.Length >> 10));// / 1024;
+                return (double)(ms.Length >> 10);
             }
         }
 
         /// <summary>
         /// Manages the initialisation of the logfile.
-        /// </summary>
+        /// </summary>        
         /// <returns>true if the path is valid, false when not.</returns>
-        private bool InitialiseLogging(string logfilePath) {
+        private bool InitialiseLogging() {
             try {
                 string fullLogfilePath = Path.GetFullPath(logfilePath);
                 bool validDir = Directory.Exists(Path.GetDirectoryName(fullLogfilePath));
@@ -347,7 +298,6 @@ namespace ArtSizeReader {
             return true;
         }
 
-
         /// <summary>
         /// Counts the number of individual MP3 files in an enumeration of directories.
         /// </summary>
@@ -355,14 +305,12 @@ namespace ArtSizeReader {
         /// <returns>The number of MP3 files in the directories.</returns>
         private int CountFiles(IEnumerable<string> dirs) {
 
-            int num = 0;
-            try {
+            int num = 0;            
                 foreach (string dir in dirs) {
-                    num += Directory.EnumerateFiles(dir, "*.mp3", SearchOption.AllDirectories).Count();
+                    num += SafeFileEnumerator.EnumerateFiles(dir, "*.mp3", SearchOption.AllDirectories).Count();
                 }
                 return num;
-            }
-            catch (UnauthorizedAccessException) { return num; }
+            
         }
 
         /// <summary>
@@ -389,12 +337,10 @@ namespace ArtSizeReader {
                 yield break;
             }
 
-
             foreach (string currentFile in musicFiles) {
                 // If logging to file is enabled, print out the progress to console anyway.
-
                 if (isLoggingEnabled) {
-                    Console.SetOut(defaultConsoleOutput);
+                    Console.SetOut(DefaultConsoleOutput);
                     Console.Write("\r{0} of {1} ({2}%) finished.{3}", ++analyzedNumberOfFiles, numberOfFiles, ((float)analyzedNumberOfFiles / (float)numberOfFiles) * 100, new string(' ', 10));
                     Console.SetOut(logfileWriter);
                 }
@@ -411,9 +357,9 @@ namespace ArtSizeReader {
         /// Checks the logfile path and starts the initialisation of the logfile.
         /// </summary>
         /// <param name="logfilePath">The path to the logfile.</param>
-        private void ValidateLogfile(string logfilePath) {
+        private void ValidateLogfile() {
             if (logfilePath != null) {
-                if (InitialiseLogging(logfilePath)) {
+                if (InitialiseLogging()) {
                     Console.WriteLine("Logging enabled, writing log to: " + logfilePath);
                 }
                 else {
@@ -426,7 +372,7 @@ namespace ArtSizeReader {
         /// Manages the initialisation of the playlist.
         /// </summary>
         /// <returns>true if the path to the playlist is valid, false when not.</returns>
-        private void ValidatePlaylist(string playlistPath) {
+        private void ValidatePlaylist() {
             if (playlistPath != null) {
                 try {
                     string fullPlaylistPath = Path.GetFullPath(playlistPath);
@@ -448,7 +394,7 @@ namespace ArtSizeReader {
         /// Checks if the resolution string is valid.
         /// </summary>
         /// <param name="threshold">The string with the resolution.</param>
-        /// <param name="isMaxThreshold">true if the parameter is the maximum threshold string, false if it's the normal resolution.</param>
+        /// <param name="isMaxThreshold">True if the parameter is the maximum threshold string, false if it's the normal resolution.</param>
         private void ValidateResolution(string threshold, bool isMaxThreshold) {
             try {
                 if (isMaxThreshold) {
@@ -469,7 +415,7 @@ namespace ArtSizeReader {
         /// Checks if the targetpath is valid and exists.
         /// </summary>
         /// <param name="targetPath">The path to the target directory.</param>
-        private void ValidateTargetPath(string targetPath) {
+        private void ValidateTargetPath() {
             if (Directory.Exists(targetPath) && !File.Exists(targetPath)) {
                 Console.WriteLine("Analyzing file(s) in " + targetPath);
             }

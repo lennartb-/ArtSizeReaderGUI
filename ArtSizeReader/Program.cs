@@ -12,7 +12,6 @@ namespace ArtSizeReader {
 #if DEBUG
             // Translates Exceptions and other messages to english.
             System.Threading.Thread.CurrentThread.CurrentUICulture = new System.Globalization.CultureInfo("en-US");
-            //System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = new System.Globalization.CultureInfo("en-US");
 #endif
             // Install global unhandled exception trapper
             AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionTrapper;
@@ -23,8 +22,9 @@ namespace ArtSizeReader {
             }
             else {
                 Console.WriteLine("\nFinished with errors!");
+
                 // Wait for user input/keep cmd window open.
-                //Console.ReadLine();
+                //// Console.ReadLine();
             }
 #if DEBUG
             // Wait for user input/keep cmd window open.
@@ -42,6 +42,7 @@ namespace ArtSizeReader {
                 if (!(options.Size == null && options.Threshold == null)) {
                     ar = new ArtReader();
                 }
+
                 // If neither of the options are present, we can't continue. Show the error and the helpscreen.
                 else {
                     HelpText t = HelpText.AutoBuild(options, (HelpText current) => HelpText.DefaultParsingErrorsHandler(options, current));
@@ -49,8 +50,7 @@ namespace ArtSizeReader {
                     t.AddPreOptionsLine("ERROR(S):\n  -t/--threshold and/or -s/--size are required.");
                     Console.WriteLine(t.ToString());
                     return false;
-                };
-
+                }
 
                 // Check if we have a target.
                 if (options.InputFile != null) {
@@ -100,8 +100,6 @@ namespace ArtSizeReader {
             return false;
         }
 
-
-
         /// <summary>
         /// Event is raised when CLR is not able to find referenced assemblies. Source: http://sanganakauthority.blogspot.co.uk/2012/03/creating-single-exe-that-depends-on.html
         /// </summary>
@@ -109,34 +107,28 @@ namespace ArtSizeReader {
         /// <param name="args"></param>
         /// <returns> Assembly to be loaded from embeded resource.</returns>
         static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args) {
-            //This handler is called only when the common language runtime tries to bind to the assembly and fails.
-            //Retrieve the list of referenced assemblies in an array of AssemblyName.
+            // This handler is called only when the common language runtime tries to bind to the assembly and fails.
+            // Retrieve the list of referenced assemblies in an array of AssemblyName.
             Assembly objExecutingAssemblies;
-            Byte[] assemblyData = null;
+            byte[] assemblyData = null;
 
             objExecutingAssemblies = Assembly.GetExecutingAssembly();
             AssemblyName[] arrReferencedAssmbNames = objExecutingAssemblies.GetReferencedAssemblies();
 
-            //Loop through the array of referenced assembly names.
+            // Loop through the array of referenced assembly names.
             foreach (AssemblyName strAssmbName in arrReferencedAssmbNames) {
-                //Check for the assembly names that have raised the "AssemblyResolve" event.
+                // Check for the assembly names that have raised the "AssemblyResolve" event.
                 if (strAssmbName.FullName.Substring(0, strAssmbName.FullName.IndexOf(",")) == args.Name.Substring(0, args.Name.IndexOf(","))) {
-                    //Build the path of the assembly from where it has to be loaded.                                               
 
-                    //Console.WriteLine(args.Name.Substring(0, args.Name.IndexOf(",")) + ".dll");
-                    //Console.WriteLine("GHeatReducer." + new AssemblyName(args.Name).Name + ".dll");
-
-                    //GHeatReducer.dll. - this name is retrievd from ILDasm tool and by opening GHeatReducer.exe in the ILDasm tool.
-                    // In ILDASM tool select name rpesent against “.mresource” to write in GetManifestResourceStream method. 
-                    // “GHeatReducer” is the name of namespace and “dll” is the name of folder where DLL files to be referenced is present as shown in above screenshot.
                     var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("ArtSizeReader." + new AssemblyName(args.Name).Name + ".dll");
 
-                    assemblyData = new Byte[stream.Length];
+                    assemblyData = new byte[stream.Length];
                     stream.Read(assemblyData, 0, assemblyData.Length);
                     break;
                 }
             }
-            //Return the loaded assembly.
+
+            // Return the loaded assembly.
             return Assembly.Load(assemblyData);
         }
 

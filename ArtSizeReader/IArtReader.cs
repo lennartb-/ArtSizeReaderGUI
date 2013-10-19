@@ -1,5 +1,4 @@
-﻿
-namespace ArtSizeReader {
+﻿namespace ArtSizeReader {
     /// <summary>
     /// Exposes the fluent inteface for ArtReader, which supports the analysis of a file or directory with various options.
     /// </summary>
