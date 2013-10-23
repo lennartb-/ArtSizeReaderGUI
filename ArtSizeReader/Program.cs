@@ -4,9 +4,8 @@ using CommandLine;
 using CommandLine.Text;
 
 namespace ArtSizeReader {
-
     public class Program {
-        private const int UNCAUGHT_EXCEPTION = 5;
+        private const int UncaughtException = 5;
 
         private static void Main(string[] args) {
 #if DEBUG
@@ -97,16 +96,17 @@ namespace ArtSizeReader {
                     return false;
                 }
             }
+
             return false;
         }
 
         /// <summary>
-        /// Event is raised when CLR is not able to find referenced assemblies. Source: http://sanganakauthority.blogspot.co.uk/2012/03/creating-single-exe-that-depends-on.html
+        /// Event is raised when CLR is not able to find referenced assemblies. Source: <a href="http://sanganakauthority.blogspot.co.uk/2012/03/creating-single-exe-that-depends-on.html" />.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="args"></param>
-        /// <returns> Assembly to be loaded from embeded resource.</returns>
-        static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args) {
+        /// <returns>Assembly to be loaded from embeded resource.</returns>
+        private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args) {
             // This handler is called only when the common language runtime tries to bind to the assembly and fails.
             // Retrieve the list of referenced assemblies in an array of AssemblyName.
             Assembly objExecutingAssemblies;
@@ -119,7 +119,6 @@ namespace ArtSizeReader {
             foreach (AssemblyName strAssmbName in arrReferencedAssmbNames) {
                 // Check for the assembly names that have raised the "AssemblyResolve" event.
                 if (strAssmbName.FullName.Substring(0, strAssmbName.FullName.IndexOf(",")) == args.Name.Substring(0, args.Name.IndexOf(","))) {
-
                     var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("ArtSizeReader." + new AssemblyName(args.Name).Name + ".dll");
 
                     assemblyData = new byte[stream.Length];
@@ -141,7 +140,7 @@ namespace ArtSizeReader {
             Console.WriteLine(e.ExceptionObject.ToString());
             Console.WriteLine("Can not continue, press any key to quit.");
             Console.ReadLine();
-            Environment.Exit(UNCAUGHT_EXCEPTION);
+            Environment.Exit(UncaughtException);
         }
     }
 }

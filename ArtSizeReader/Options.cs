@@ -2,7 +2,6 @@
 using CommandLine.Text;
 
 namespace ArtSizeReader {
-
     public class Options {
         [Option('i', "input", Required = true,
           HelpText = "A file or directory to analyze.")]

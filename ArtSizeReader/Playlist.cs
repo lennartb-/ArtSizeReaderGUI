@@ -3,7 +3,6 @@ using System.IO;
 using System.Text;
 
 namespace ArtSizeReader {
-
     internal class Playlist {
         private string path;
 
