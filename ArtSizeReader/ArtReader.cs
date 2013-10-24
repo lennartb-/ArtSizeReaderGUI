@@ -16,8 +16,8 @@ namespace ArtSizeReader {
         private bool hasRatio = false;
         private bool hasSizeLimit = false;
         private bool hasThreshold = false;
-        private bool isLoggingEnabled = false;
-        private bool isPlaylistEnabled = false;
+        private bool withLogfile = false;
+        private bool withPlaylist = false;
 
         // Used for progress bar
         private int analyzedNumberOfFiles;
@@ -45,8 +45,9 @@ namespace ArtSizeReader {
         /// <exception cref="ArgumentException">Thrown when any of the supplied arguments are invalid.</exception>
         public ArtReader Create() {
             try {
-                // Set up logfile.
-                ValidateLogfile();
+                if (withLogfile) {
+                    ValidateLogfile();
+                }
 
                 // Check if target path is valid.
                 ValidateTargetPath();
@@ -69,8 +70,9 @@ namespace ArtSizeReader {
                     Console.WriteLine("Maximum threshold enabled, selected value: " + maxResolution[0] + "x" + maxResolution[1]);
                 }
 
-                // Set up playlist output.
-                ValidatePlaylist();
+                if (withPlaylist) {
+                    ValidatePlaylist();
+                }
             }
             catch (ArgumentException) {
                 throw;
@@ -127,7 +129,7 @@ namespace ArtSizeReader {
         /// <returns>The instance of the current object.</returns>
         public IArtReader WithLogfile(string logfile) {
             this.logfilePath = logfile;
-            isLoggingEnabled = true;
+            withLogfile = true;
             return this;
         }
 
@@ -149,7 +151,7 @@ namespace ArtSizeReader {
         /// <returns>The instance of the current object.</returns>
         public IArtReader WithPlaylist(string playlist) {
             this.playlistPath = playlist;
-            isPlaylistEnabled = true;
+            withPlaylist = true;
             return this;
         }
 
@@ -206,7 +208,7 @@ namespace ArtSizeReader {
 
                 if (hasSizeLimit) {
                     double imagesize = GetImageSize(cover.Picture);
-                    if (imagesize > this.size / 1024) {
+                    if (imagesize > this.size) {
                         message += "Artwork filesize is " + imagesize + " kB. ";
                     }
                 }
@@ -223,9 +225,9 @@ namespace ArtSizeReader {
 
             // If one of the checks failed, write it to console.
             if (!message.Equals(string.Empty)) {
-                if (!isLoggingEnabled) Console.Write("\r");
+                if (!withLogfile) Console.Write("\r");
                 Console.WriteLine(file + ": " + message);
-                if (isPlaylistEnabled) playlist.Write(file);
+                if (withPlaylist) playlist.Write(file);
             }
         }
 
@@ -252,6 +254,7 @@ namespace ArtSizeReader {
             using (var ms = new MemoryStream(image.Size.Width * image.Size.Height * Image.GetPixelFormatSize(image.PixelFormat) / 8)) {
                 image.Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
 
+                // Convert to kB.
                 return (double)(ms.Length >> 10);
             }
         }
@@ -335,7 +338,7 @@ namespace ArtSizeReader {
 
             foreach (string currentFile in musicFiles) {
                 // If logging to file is enabled, print out the progress to console anyway.
-                if (isLoggingEnabled) {
+                if (withLogfile) {
                     Console.SetOut(DefaultConsoleOutput);
                     Console.Write("\r{0} of {1} ({2}%) finished.{3}", ++analyzedNumberOfFiles, numberOfFiles, ((float)analyzedNumberOfFiles / (float)numberOfFiles) * 100, new string(' ', 10));
                     Console.SetOut(logfileWriter);

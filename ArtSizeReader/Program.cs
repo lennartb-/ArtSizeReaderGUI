@@ -31,6 +31,11 @@ namespace ArtSizeReader {
 #endif
         }
 
+        /// <summary>
+        /// Handles the parsing of the supplied program arguments.
+        /// </summary>
+        /// <param name="args">Main method's arguments.</param>
+        /// <returns>True if everything went well, false if an error occured.</returns>
         private static bool ParseOptions(string[] args) {
             // Get command line parser
             Options options = new Options();
@@ -101,7 +106,9 @@ namespace ArtSizeReader {
         }
 
         /// <summary>
-        /// Event is raised when CLR is not able to find referenced assemblies. Source: <a href="http://sanganakauthority.blogspot.co.uk/2012/03/creating-single-exe-that-depends-on.html" />.
+        /// Event is raised when CLR is not able to find referenced assemblies.
+        /// Used to call the libraries that were compiled into the assembly (no reliance on DLL files).
+        /// Source: <a href="http://sanganakauthority.blogspot.co.uk/2012/03/creating-single-exe-that-depends-on.html" />.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="args"></param>
@@ -137,6 +144,7 @@ namespace ArtSizeReader {
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private static void UnhandledExceptionTrapper(object sender, UnhandledExceptionEventArgs e) {
+            Console.WriteLine("An unhandled exception occured! Information: ");
             Console.WriteLine(e.ExceptionObject.ToString());
             Console.WriteLine("Can not continue, press any key to quit.");
             Console.ReadLine();
