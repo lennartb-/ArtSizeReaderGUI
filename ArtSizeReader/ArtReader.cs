@@ -89,7 +89,7 @@ namespace ArtSizeReader {
         /// Starts fetching the album art from the specified file or directory.
         /// </summary>
         /// <returns>True if analysing succeeded, false if the file or path could not be found.</returns>
-        public bool GetAlbumArt() {
+        public bool GetAlbumArt() {            
             // Target is a single file
             if (File.Exists(targetPath)) {
                 AnalyzeFile(targetPath);
@@ -99,6 +99,7 @@ namespace ArtSizeReader {
             // Target is a directory
             else if (Directory.Exists(targetPath)) {
                 // Search for files in the directory, but filter out inaccessible folders before.
+                
                 var accessibleDirectories = SafeFileEnumerator.EnumerateDirectories(targetPath, "*.*", SearchOption.AllDirectories);
                 IEnumerable<string> temp = new string[] { targetPath };
                 accessibleDirectories = accessibleDirectories.Concat(temp);
@@ -214,9 +215,15 @@ namespace ArtSizeReader {
                 ID3v2PictureFrame cover = (ID3v2PictureFrame)covers[0];
 
                 if (hasSizeLimit) {
-                    double imagesize = GetImageSize(cover.Picture);
-                    if (imagesize > this.size) {
-                        message += "Artwork filesize is " + imagesize + " kB. ";
+                    try {
+                        double imagesize = GetImageSize(cover.Picture);
+                    
+                        if (imagesize > this.size) {
+                            message += "Artwork filesize is " + imagesize + " kB. ";
+                        }
+                    }
+                    catch (Exception e) {
+                        message += string.Format("Could not get image size from file {1}, Reason: {2} ({3})", file, e.Message, e.GetType().Name);                        
                     }
                 }
 
@@ -258,11 +265,17 @@ namespace ArtSizeReader {
         /// <param name="image">The image to check.</param>
         /// <returns>The file size in bytes.</returns>
         private double GetImageSize(Bitmap image) {
-            using (var ms = new MemoryStream()) {
-                image.Save(ms, image.RawFormat);                
-                // Convert to kB.
-                return (double)(ms.Length >> 10);
+            try {
+                using (var ms = new MemoryStream()) {
+                    image.Save(ms, image.RawFormat);
+                    // Convert to kB.
+                    return (double)(ms.Length >> 10);
+                }
             }
+            catch (Exception) {
+                throw;
+            }
+
         }
         
 
@@ -327,21 +340,8 @@ namespace ArtSizeReader {
         private IEnumerable<string> ReadFiles(string directory) {
             IEnumerable<string> musicFiles;
 
-            // Get all files in the directory.
-            try {
-                if (!directory.Equals(targetPath)) {
-                    musicFiles = Directory.GetFiles(directory, "*.mp3");
-                }
-                else musicFiles = Directory.GetFiles(directory, "*.mp3");
-            }
-            catch (UnauthorizedAccessException uae) {
-                Console.WriteLine(uae.Message);
-                yield break;
-            }
-            catch (PathTooLongException ptle) {
-                Console.WriteLine(ptle.Message);
-                yield break;
-            }
+            // Get all files in the directory.            
+            musicFiles = SafeFileEnumerator.EnumerateFiles(directory, "*.mp3",SearchOption.TopDirectoryOnly);
 
             foreach (string currentFile in musicFiles) {
                 // If logging to file is enabled, print out the progress to console anyway.

@@ -35,6 +35,10 @@ namespace ArtSizeReader {
             catch (UnauthorizedAccessException) {
                 return Enumerable.Empty<string>();
             }
+            catch (PathTooLongException) {
+                Console.WriteLine("(Warning) Path too long: " + parentDirectory);
+                return Enumerable.Empty<string>();
+            }
         }
 
         /// <summary>
@@ -59,7 +63,11 @@ namespace ArtSizeReader {
 
                 return dirFiles.Concat(Directory.EnumerateFiles(path, searchPattern));
             }
-            catch (UnauthorizedAccessException) {
+            catch (UnauthorizedAccessException) {                
+                return Enumerable.Empty<string>();
+            }
+            catch (PathTooLongException) {
+                Console.WriteLine("(Warning) Filename and Path too long: " + path);
                 return Enumerable.Empty<string>();
             }
         }
