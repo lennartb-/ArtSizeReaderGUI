@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using HundredMilesSoftware.UltraID3Lib;
 
 namespace ArtSizeReader {
+
     public class ArtReader : IArtReader {
+
         // Preserve standard Console output
         private static readonly StreamWriter DefaultConsoleOutput = new StreamWriter(Console.OpenStandardOutput());
         private StreamWriter logfileWriter = DefaultConsoleOutput;
@@ -28,7 +32,7 @@ namespace ArtSizeReader {
         private string targetPath;
         private string threshold;
 
-        // Optional parameter values        
+        // Optional parameter values
         private string logfilePath;
         private string maxThreshold;
         private string playlistPath;
@@ -96,6 +100,8 @@ namespace ArtSizeReader {
             else if (Directory.Exists(targetPath)) {
                 // Search for files in the directory, but filter out inaccessible folders before.
                 var accessibleDirectories = SafeFileEnumerator.EnumerateDirectories(targetPath, "*.*", SearchOption.AllDirectories);
+                IEnumerable<string> temp = new string[] { targetPath };
+                accessibleDirectories = accessibleDirectories.Concat(temp);
                 numberOfFiles = CountFiles(accessibleDirectories);
 
                 foreach (string dir in accessibleDirectories) {
@@ -186,6 +192,7 @@ namespace ArtSizeReader {
             hasThreshold = true;
             return this;
         }
+
         #endregion Interface allocation methods
 
         #region Private methods
@@ -237,9 +244,9 @@ namespace ArtSizeReader {
         /// <param name="dirs">The enumerated directories.</param>
         /// <returns>The number of MP3 files in the directories.</returns>
         private int CountFiles(IEnumerable<string> dirs) {
-            int num = 0;
+            int num = 0;    
             foreach (string dir in dirs) {
-                num += SafeFileEnumerator.EnumerateFiles(dir, "*.mp3", SearchOption.AllDirectories).Count();
+                num += SafeFileEnumerator.EnumerateFiles(dir, "*.mp3", SearchOption.TopDirectoryOnly).Count();
             }
 
             return num;
@@ -251,13 +258,13 @@ namespace ArtSizeReader {
         /// <param name="image">The image to check.</param>
         /// <returns>The file size in bytes.</returns>
         private double GetImageSize(Bitmap image) {
-            using (var ms = new MemoryStream(image.Size.Width * image.Size.Height * Image.GetPixelFormatSize(image.PixelFormat) / 8)) {
-                image.Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
-
+            using (var ms = new MemoryStream()) {
+                image.Save(ms, image.RawFormat);                
                 // Convert to kB.
                 return (double)(ms.Length >> 10);
             }
         }
+        
 
         /// <summary>
         /// Manages the initialisation of the logfile.
@@ -285,7 +292,7 @@ namespace ArtSizeReader {
         /// <summary>
         /// Checks whether the size of an image is below the global threshold.
         /// </summary>
-        /// <param name="image">The image to check.</param>        
+        /// <param name="image">The image to check.</param>
         /// <returns>false if the image is below the limit or has no 1:1 ratio, true if not.</returns>
         private bool IsWellFormedImage(Bitmap image) {
             // Check if image is below (minimum) threshold.
@@ -340,13 +347,13 @@ namespace ArtSizeReader {
                 // If logging to file is enabled, print out the progress to console anyway.
                 if (withLogfile) {
                     Console.SetOut(DefaultConsoleOutput);
-                    Console.Write("\r{0} of {1} ({2}%) finished.{3}", ++analyzedNumberOfFiles, numberOfFiles, ((float)analyzedNumberOfFiles / (float)numberOfFiles) * 100, new string(' ', 10));
+                    Console.Write("\r{0} of {1} ({2}%) finished.{3}", ++analyzedNumberOfFiles, numberOfFiles, ((float)analyzedNumberOfFiles / (float)numberOfFiles) * 100, new string(' ', Console.LargestWindowWidth));
                     Console.SetOut(logfileWriter);
                 }
                 else {
                     /* Print out progress. Argument {3} ensures that any text right of the progress is cleared,
                      * otherwise old chars are not removed, since the number of decimal places of the percentage may vary.*/
-                    Console.Write("\r{0} of {1} ({2}%) finished.{3}", ++analyzedNumberOfFiles, numberOfFiles, ((float)analyzedNumberOfFiles / (float)numberOfFiles) * 100, new string(' ', 10));
+                    Console.Write("\r{0} of {1} ({2}%) finished.{3}", ++analyzedNumberOfFiles, numberOfFiles, ((float)analyzedNumberOfFiles / (float)numberOfFiles) * 100, new string(' ', Console.LargestWindowWidth));
                 }
 
                 yield return currentFile;
@@ -355,7 +362,7 @@ namespace ArtSizeReader {
 
         /// <summary>
         /// Checks the logfile path and starts the initialisation of the logfile.
-        /// </summary>        
+        /// </summary>
         private void ValidateLogfile() {
             if (logfilePath != null) {
                 if (InitialiseLogging()) {
@@ -369,7 +376,7 @@ namespace ArtSizeReader {
 
         /// <summary>
         /// Manages the initialisation of the playlist.
-        /// </summary>        
+        /// </summary>
         private void ValidatePlaylist() {
             if (playlistPath != null) {
                 try {
@@ -410,7 +417,7 @@ namespace ArtSizeReader {
 
         /// <summary>
         /// Checks if the targetpath is valid and exists.
-        /// </summary>        
+        /// </summary>
         private void ValidateTargetPath() {
             if (Directory.Exists(targetPath) && !File.Exists(targetPath)) {
                 Console.WriteLine("Analyzing file(s) in " + targetPath);
