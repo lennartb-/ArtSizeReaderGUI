@@ -207,7 +207,14 @@ namespace ArtSizeReader {
             string message = string.Empty;
 
             // Reader tags from file and get the content of the cover tag
-            tags.Read(file);
+            try {
+                tags.Read(file);
+            }
+            catch (Exception e) {
+                Console.WriteLine("Unable to read file tags for: " + file+ ", ID3 tags might be corrupt.");
+                Console.WriteLine("Exception: "+e.Message + "(" +e.GetType()+")");
+                return;
+            }
             ID3FrameCollection covers = tags.ID3v2Tag.Frames.GetFrames(CommonMultipleInstanceID3v2FrameTypes.Picture);
 
             // Check if there actually is a cover.
@@ -223,7 +230,7 @@ namespace ArtSizeReader {
                         }
                     }
                     catch (Exception e) {
-                        message += string.Format("Could not get image size from file {1}, Reason: {2} ({3})", file, e.Message, e.GetType().Name);                        
+                        message += string.Format("Could not get image size from file {0}, Reason: {1} ({2})", file, e.Message, e.GetType().Name);                        
                     }
                 }
 
@@ -268,7 +275,7 @@ namespace ArtSizeReader {
             try {
                 using (var ms = new MemoryStream()) {
                     image.Save(ms, image.RawFormat);
-                    // Convert to kB.
+                    // Convert to kB.                    
                     return (double)(ms.Length >> 10);
                 }
             }
@@ -416,11 +423,14 @@ namespace ArtSizeReader {
         }
 
         /// <summary>
-        /// Checks if the targetpath is valid and exists.
+        /// Checks if the target path is valid and exists.
         /// </summary>
         private void ValidateTargetPath() {
-            if (Directory.Exists(targetPath) && !File.Exists(targetPath)) {
+            if (Directory.Exists(targetPath)) {
                 Console.WriteLine("Analyzing file(s) in " + targetPath);
+            }
+            else if (File.Exists(targetPath)) {
+                Console.WriteLine("Analyzing file " + targetPath);
             }
             else {
                 throw new ArgumentException("Invalid target path: " + targetPath);
