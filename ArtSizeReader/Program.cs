@@ -6,7 +6,7 @@ using CommandLine.Text;
 namespace ArtSizeReader {
     public class Program {
         private const int UncaughtException = 5;
-
+        [STAThread]
         private static void Main(string[] args) {
 #if DEBUG
             // Translates Exceptions and other messages to english.

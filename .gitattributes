@@ -3,6 +3,7 @@
 /ArtSizeReader svn_global_002dignores=bin%0Aobj%0A
 /ArtSizeReader.sln -text
 /ArtSizeReader.v11.suo -text
+/ArtSizeReader.v12.suo -text
 ArtSizeReader/App.config -text
 ArtSizeReader/ArtReader.cs -text
 ArtSizeReader/ArtSizeReader.csproj -text
@@ -17,10 +18,11 @@ ArtSizeReader/Properties/AssemblyInfo.cs -text
 ArtSizeReader/SafeFileEnumerator.cs -text
 ArtSizeReader/Settings.StyleCop -text
 ArtSizeReader/StyleCop.Cache -text
-ArtSizeReader/UltraID3Lib.dll -text
 ArtSizeReader/lib/UltraID3Lib.dll -text
 ArtSizeReader/lib/UltraID3Lib.xml -text
+ArtSizeReader/lib/taglib-sharp.dll -text
 ArtSizeReader/packages.config -text
+ArtSizeReader/taglib-sharp.dll -text
 packages/CommandLineParser.1.9.71/CommandLineParser.1.9.71.nupkg -text
 packages/CommandLineParser.1.9.71/CommandLineParser.1.9.71.nuspec -text
 packages/CommandLineParser.1.9.71/lib/net35/CommandLine.dll -text

@@ -5,7 +5,6 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
-using HundredMilesSoftware.UltraID3Lib;
 
 namespace ArtSizeReader {
 
@@ -40,7 +39,8 @@ namespace ArtSizeReader {
         // Input values converted to other datatypes:
         private Playlist playlist;
         private uint[] maxResolution;
-        private uint[] resolution;
+        private uint[] resolution;       
+        
 
         /// <summary>
         /// Builds an ArtReader object from the specified parameters and checks if they are valid.
@@ -141,7 +141,7 @@ namespace ArtSizeReader {
         }
 
         /// <summary>
-        /// Specifies the art size maximum threshold in the format WIDHTxHEIGHT.
+        /// Specifies the art size maximum threshold in the format WIDTHxHEIGHT.
         /// </summary>
         /// <param name="maxThreshold">The maximum threshold.</param>
         /// <returns>The instance of the current object.</returns>
@@ -163,7 +163,7 @@ namespace ArtSizeReader {
         }
 
         /// <summary>
-        /// Specifies the art size threshold in the format WIDHTxHEIGHT.
+        /// Specifies the art size threshold in the format WIDTHxHEIGHT.
         /// </summary>
         /// <param name="hasRatio">The threshold.</param>
         /// <returns>The instance of the current object.</returns>
@@ -184,7 +184,7 @@ namespace ArtSizeReader {
         }
 
         /// <summary>
-        /// Specifies the art size threshold in the format WIDHTxHEIGHT.
+        /// Specifies the art size threshold in the format WIDTHxHEIGHT.
         /// </summary>
         /// <param name="threshold">The threshold.</param>
         /// <returns>The instance of the current object.</returns>
@@ -203,27 +203,31 @@ namespace ArtSizeReader {
         /// </summary>
         /// <param name="file">The file to check.</param>
         private void AnalyzeFile(string file) {
-            UltraID3 tags = new UltraID3();
+            TagLib.File tag = TagLib.File.Create(file);
+            
+           
             string message = string.Empty;
 
             // Reader tags from file and get the content of the cover tag
             try {
-                tags.Read(file);
+////                tags.Read(file);
             }
             catch (Exception e) {
                 Console.WriteLine("Unable to read file tags for: " + file+ ", ID3 tags might be corrupt.");
                 Console.WriteLine("Exception: "+e.Message + "(" +e.GetType()+")");
                 return;
-            }
-            ID3FrameCollection covers = tags.ID3v2Tag.Frames.GetFrames(CommonMultipleInstanceID3v2FrameTypes.Picture);
+            }            
 
             // Check if there actually is a cover.
-            if (covers.Count > 0) {
-                ID3v2PictureFrame cover = (ID3v2PictureFrame)covers[0];
+            if (tag.Tag.Pictures.Length > 0) {               
+                    
+              MemoryStream ms = new MemoryStream(tag.Tag.Pictures[0].Data.Data);
+               System.Drawing.Image image = System.Drawing.Image.FromStream(ms);
+                
 
                 if (hasSizeLimit) {
                     try {
-                        double imagesize = GetImageSize(cover.Picture);
+                        double imagesize = GetImageSize(image);
                     
                         if (imagesize > this.size) {
                             message += "Artwork filesize is " + imagesize + " kB. ";
@@ -234,8 +238,8 @@ namespace ArtSizeReader {
                     }
                 }
 
-                if (!IsWellFormedImage(cover.Picture)) {
-                    message += "Artwork image size is " + cover.Picture.Size.Width + "x" + cover.Picture.Size.Height;
+                if (!IsWellFormedImage(image)) {
+                    message += "Artwork image size is " + image.Size.Width + "x" + image.Size.Height;
                 }
             }
 
@@ -271,7 +275,7 @@ namespace ArtSizeReader {
         /// </summary>
         /// <param name="image">The image to check.</param>
         /// <returns>The file size in bytes.</returns>
-        private double GetImageSize(Bitmap image) {
+        private double GetImageSize(Image image) {
             try {
                 using (var ms = new MemoryStream()) {
                     image.Save(ms, image.RawFormat);
@@ -314,7 +318,7 @@ namespace ArtSizeReader {
         /// </summary>
         /// <param name="image">The image to check.</param>
         /// <returns>false if the image is below the limit or has no 1:1 ratio, true if not.</returns>
-        private bool IsWellFormedImage(Bitmap image) {
+        private bool IsWellFormedImage(Image image) {
             // Check if image is below (minimum) threshold.
             if (hasThreshold) {
                 if (image.Size.Width < resolution[0] || image.Size.Height < resolution[1]) {
