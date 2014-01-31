@@ -221,6 +221,7 @@
             this.AnalyzeButton.TabIndex = 20;
             this.AnalyzeButton.Text = "Analyze";
             this.AnalyzeButton.UseVisualStyleBackColor = true;
+            this.AnalyzeButton.Click += new System.EventHandler(this.AnalyzeButton_Click);
             // 
             // ResetButton
             // 

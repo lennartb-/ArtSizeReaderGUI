@@ -38,7 +38,7 @@ namespace ArtSizeReader {
         /// </summary>
         /// <param name="args">Main method's arguments.</param>
         /// <returns>True if everything went well, false if an error occured.</returns>
-        private static bool ParseOptions(string[] args) {
+        internal static bool ParseOptions(string[] args) {
             // Get command line parser
             Options options = new Options();
             if (Parser.Default.ParseArguments(args, options)) {
