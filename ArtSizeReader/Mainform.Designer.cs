@@ -43,6 +43,8 @@
             this.label8 = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
             this.BitrateTextBox = new System.Windows.Forms.TextBox();
+            this.AnalyzeButton = new System.Windows.Forms.Button();
+            this.ResetButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.ResultDataGridView)).BeginInit();
             this.SuspendLayout();
             // 
@@ -211,11 +213,31 @@
             this.BitrateTextBox.Size = new System.Drawing.Size(100, 20);
             this.BitrateTextBox.TabIndex = 19;
             // 
+            // AnalyzeButton
+            // 
+            this.AnalyzeButton.Location = new System.Drawing.Point(397, 160);
+            this.AnalyzeButton.Name = "AnalyzeButton";
+            this.AnalyzeButton.Size = new System.Drawing.Size(75, 23);
+            this.AnalyzeButton.TabIndex = 20;
+            this.AnalyzeButton.Text = "Analyze";
+            this.AnalyzeButton.UseVisualStyleBackColor = true;
+            // 
+            // ResetButton
+            // 
+            this.ResetButton.Location = new System.Drawing.Point(514, 160);
+            this.ResetButton.Name = "ResetButton";
+            this.ResetButton.Size = new System.Drawing.Size(75, 23);
+            this.ResetButton.TabIndex = 21;
+            this.ResetButton.Text = "Reset";
+            this.ResetButton.UseVisualStyleBackColor = true;
+            // 
             // Mainform
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(613, 460);
+            this.Controls.Add(this.ResetButton);
+            this.Controls.Add(this.AnalyzeButton);
             this.Controls.Add(this.BitrateTextBox);
             this.Controls.Add(this.label9);
             this.Controls.Add(this.label8);
@@ -266,5 +288,7 @@
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.TextBox BitrateTextBox;
+        private System.Windows.Forms.Button AnalyzeButton;
+        private System.Windows.Forms.Button ResetButton;
     }
 }
