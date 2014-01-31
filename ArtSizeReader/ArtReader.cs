@@ -39,7 +39,9 @@ namespace ArtSizeReader {
         // Input values converted to other datatypes:
         private Playlist playlist;
         private uint[] maxResolution;
-        private uint[] resolution;       
+        private uint[] resolution;
+
+        private bool fromGui;
         
 
         /// <summary>
@@ -118,6 +120,16 @@ namespace ArtSizeReader {
         }
 
         #region Interface allocation methods
+
+        /// <summary>
+        /// Specifies whether the object was created from GUI or CMD.
+        /// </summary>
+        /// <param name="fromGui">True if from GUI, false if from CMD.</param>
+        /// <returns>The instance of the current object.</returns>
+        public IArtReader FromGui(bool fromGui) {
+            this.fromGui = fromGui;
+            return this;
+        }
 
         /// <summary>
         /// Specifies the file or path that will be analysed.
@@ -254,6 +266,10 @@ namespace ArtSizeReader {
                 Console.WriteLine(file + ": " + message);
                 if (withPlaylist) playlist.Write(file);
             }
+        }
+
+        private void HandleResults() {
+
         }
 
         /// <summary>

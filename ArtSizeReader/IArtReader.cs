@@ -18,5 +18,7 @@
         IArtReader WithSize(double? size);
 
         IArtReader WithMaxThreshold(string resolution);
+
+        IArtReader FromGui(bool fromGui);
     }
 }

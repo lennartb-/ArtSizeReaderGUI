@@ -35,7 +35,7 @@ namespace ArtSizeReader {
         }
 
         private void AnalyzeButton_Click(object sender, EventArgs e) {
-            Program.ParseOptions(ParseOptionsIntoArgs());
+            Program.ParseOptions(ParseOptionsIntoArgs(), true);
         }
     }
     /// <summary>

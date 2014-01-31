@@ -18,7 +18,7 @@ namespace ArtSizeReader {
             AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(CurrentDomain_AssemblyResolve);
 
             // CMD Version
-            if (ParseOptions(args)) {
+            if (ParseOptions(args, false)) {
                 Console.WriteLine("\nFinished!");
             }
             // WinForms Version
@@ -38,12 +38,12 @@ namespace ArtSizeReader {
         /// </summary>
         /// <param name="args">Main method's arguments.</param>
         /// <returns>True if everything went well, false if an error occured.</returns>
-        internal static bool ParseOptions(string[] args) {
+        internal static bool ParseOptions(string[] args, bool fromGui) {
             // Get command line parser
             Options options = new Options();
             if (Parser.Default.ParseArguments(args, options)) {
                 ArtReader ar;
-
+                
                 // If either one or both options are present, continue.
                 if (!(options.Size == null && options.Threshold == null)) {
                     ar = new ArtReader();
@@ -57,6 +57,7 @@ namespace ArtSizeReader {
                     Console.WriteLine(t.ToString());
                     return false;
                 }
+                ar.FromGui(fromGui);
 
                 // Check if we have a target.
                 if (options.InputFile != null) {
