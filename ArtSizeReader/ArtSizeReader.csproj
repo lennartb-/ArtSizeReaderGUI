@@ -5,7 +5,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{7EFD3651-D74F-40EA-B714-90D9564193BD}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>ArtSizeReader</RootNamespace>
     <AssemblyName>ArtSizeReader</AssemblyName>
@@ -48,6 +48,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="CommandLine">
       <HintPath>..\packages\CommandLineParser.1.9.71\lib\net40\CommandLine.dll</HintPath>
@@ -55,6 +58,7 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -67,6 +71,12 @@
   <ItemGroup>
     <Compile Include="ArtReader.cs" />
     <Compile Include="IArtReader.cs" />
+    <Compile Include="Mainform.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Mainform.Designer.cs">
+      <DependentUpon>Mainform.cs</DependentUpon>
+    </Compile>
     <Compile Include="Options.cs" />
     <Compile Include="Playlist.cs" />
     <Compile Include="Program.cs" />
@@ -78,6 +88,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Mainform.resx">
+      <DependentUpon>Mainform.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="taglib-sharp.dll" />
     <EmbeddedResource Include="CommandLine.dll" />
     <Content Include="License.txt" />

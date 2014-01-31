@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using System.Windows.Forms;
 using CommandLine;
 using CommandLine.Text;
 
@@ -20,7 +21,7 @@ namespace ArtSizeReader {
                 Console.WriteLine("\nFinished!");
             }
             else {
-                Console.WriteLine("\nFinished with errors!");
+                Application.Run(new Mainform());
 
                 // Wait for user input/keep cmd window open.
                 //// Console.ReadLine();
