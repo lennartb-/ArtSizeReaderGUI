@@ -24,26 +24,26 @@
         /// </summary>
         private void InitializeComponent() {
             this.InputTextBox = new System.Windows.Forms.TextBox();
-            this.dataGridView1 = new System.Windows.Forms.DataGridView();
-            this.checkBox1 = new System.Windows.Forms.CheckBox();
-            this.textBox2 = new System.Windows.Forms.TextBox();
-            this.textBox3 = new System.Windows.Forms.TextBox();
-            this.textBox4 = new System.Windows.Forms.TextBox();
-            this.textBox5 = new System.Windows.Forms.TextBox();
-            this.textBox6 = new System.Windows.Forms.TextBox();
+            this.ResultDataGridView = new System.Windows.Forms.DataGridView();
+            this.WithRatio = new System.Windows.Forms.CheckBox();
+            this.ThresholdWidthTextBox = new System.Windows.Forms.TextBox();
+            this.ThresholdHeightTextBox = new System.Windows.Forms.TextBox();
+            this.MaxThresholdWidthTextBox = new System.Windows.Forms.TextBox();
+            this.MaxFilesizeTextBox = new System.Windows.Forms.TextBox();
+            this.MaxThresholdHeightTextBox = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
-            this.textBox7 = new System.Windows.Forms.TextBox();
-            this.textBox8 = new System.Windows.Forms.TextBox();
+            this.PlaylistPathTextbox = new System.Windows.Forms.TextBox();
+            this.LogfilePathTextbox = new System.Windows.Forms.TextBox();
             this.label7 = new System.Windows.Forms.Label();
             this.label8 = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
-            this.textBox9 = new System.Windows.Forms.TextBox();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
+            this.BitrateTextBox = new System.Windows.Forms.TextBox();
+            ((System.ComponentModel.ISupportInitialize)(this.ResultDataGridView)).BeginInit();
             this.SuspendLayout();
             // 
             // InputTextBox
@@ -53,61 +53,61 @@
             this.InputTextBox.Size = new System.Drawing.Size(452, 20);
             this.InputTextBox.TabIndex = 0;
             // 
-            // dataGridView1
+            // ResultDataGridView
             // 
-            this.dataGridView1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            this.ResultDataGridView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridView1.Location = new System.Drawing.Point(12, 189);
-            this.dataGridView1.Name = "dataGridView1";
-            this.dataGridView1.Size = new System.Drawing.Size(589, 259);
-            this.dataGridView1.TabIndex = 1;
+            this.ResultDataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.ResultDataGridView.Location = new System.Drawing.Point(12, 189);
+            this.ResultDataGridView.Name = "ResultDataGridView";
+            this.ResultDataGridView.Size = new System.Drawing.Size(589, 259);
+            this.ResultDataGridView.TabIndex = 1;
             // 
-            // checkBox1
+            // WithRatio
             // 
-            this.checkBox1.AutoSize = true;
-            this.checkBox1.Location = new System.Drawing.Point(334, 59);
-            this.checkBox1.Name = "checkBox1";
-            this.checkBox1.Size = new System.Drawing.Size(64, 17);
-            this.checkBox1.TabIndex = 2;
-            this.checkBox1.Text = "1:1 ratio";
-            this.checkBox1.UseVisualStyleBackColor = true;
+            this.WithRatio.AutoSize = true;
+            this.WithRatio.Location = new System.Drawing.Point(334, 59);
+            this.WithRatio.Name = "WithRatio";
+            this.WithRatio.Size = new System.Drawing.Size(64, 17);
+            this.WithRatio.TabIndex = 2;
+            this.WithRatio.Text = "1:1 ratio";
+            this.WithRatio.UseVisualStyleBackColor = true;
             // 
-            // textBox2
+            // ThresholdWidthTextBox
             // 
-            this.textBox2.Location = new System.Drawing.Point(101, 31);
-            this.textBox2.Name = "textBox2";
-            this.textBox2.Size = new System.Drawing.Size(100, 20);
-            this.textBox2.TabIndex = 3;
+            this.ThresholdWidthTextBox.Location = new System.Drawing.Point(101, 31);
+            this.ThresholdWidthTextBox.Name = "ThresholdWidthTextBox";
+            this.ThresholdWidthTextBox.Size = new System.Drawing.Size(100, 20);
+            this.ThresholdWidthTextBox.TabIndex = 3;
             // 
-            // textBox3
+            // ThresholdHeightTextBox
             // 
-            this.textBox3.Location = new System.Drawing.Point(225, 31);
-            this.textBox3.Name = "textBox3";
-            this.textBox3.Size = new System.Drawing.Size(100, 20);
-            this.textBox3.TabIndex = 4;
+            this.ThresholdHeightTextBox.Location = new System.Drawing.Point(225, 31);
+            this.ThresholdHeightTextBox.Name = "ThresholdHeightTextBox";
+            this.ThresholdHeightTextBox.Size = new System.Drawing.Size(100, 20);
+            this.ThresholdHeightTextBox.TabIndex = 4;
             // 
-            // textBox4
+            // MaxThresholdWidthTextBox
             // 
-            this.textBox4.Location = new System.Drawing.Point(101, 57);
-            this.textBox4.Name = "textBox4";
-            this.textBox4.Size = new System.Drawing.Size(100, 20);
-            this.textBox4.TabIndex = 5;
+            this.MaxThresholdWidthTextBox.Location = new System.Drawing.Point(101, 57);
+            this.MaxThresholdWidthTextBox.Name = "MaxThresholdWidthTextBox";
+            this.MaxThresholdWidthTextBox.Size = new System.Drawing.Size(100, 20);
+            this.MaxThresholdWidthTextBox.TabIndex = 5;
             // 
-            // textBox5
+            // MaxFilesizeTextBox
             // 
-            this.textBox5.Location = new System.Drawing.Point(407, 31);
-            this.textBox5.Name = "textBox5";
-            this.textBox5.Size = new System.Drawing.Size(100, 20);
-            this.textBox5.TabIndex = 6;
+            this.MaxFilesizeTextBox.Location = new System.Drawing.Point(407, 31);
+            this.MaxFilesizeTextBox.Name = "MaxFilesizeTextBox";
+            this.MaxFilesizeTextBox.Size = new System.Drawing.Size(100, 20);
+            this.MaxFilesizeTextBox.TabIndex = 6;
             // 
-            // textBox6
+            // MaxThresholdHeightTextBox
             // 
-            this.textBox6.Location = new System.Drawing.Point(225, 57);
-            this.textBox6.Name = "textBox6";
-            this.textBox6.Size = new System.Drawing.Size(100, 20);
-            this.textBox6.TabIndex = 7;
+            this.MaxThresholdHeightTextBox.Location = new System.Drawing.Point(225, 57);
+            this.MaxThresholdHeightTextBox.Name = "MaxThresholdHeightTextBox";
+            this.MaxThresholdHeightTextBox.Size = new System.Drawing.Size(100, 20);
+            this.MaxThresholdHeightTextBox.TabIndex = 7;
             // 
             // label1
             // 
@@ -163,19 +163,19 @@
             this.label6.TabIndex = 13;
             this.label6.Text = "Logfile path:";
             // 
-            // textBox7
+            // PlaylistPathTextbox
             // 
-            this.textBox7.Location = new System.Drawing.Point(88, 110);
-            this.textBox7.Name = "textBox7";
-            this.textBox7.Size = new System.Drawing.Size(237, 20);
-            this.textBox7.TabIndex = 14;
+            this.PlaylistPathTextbox.Location = new System.Drawing.Point(88, 110);
+            this.PlaylistPathTextbox.Name = "PlaylistPathTextbox";
+            this.PlaylistPathTextbox.Size = new System.Drawing.Size(237, 20);
+            this.PlaylistPathTextbox.TabIndex = 14;
             // 
-            // textBox8
+            // LogfilePathTextbox
             // 
-            this.textBox8.Location = new System.Drawing.Point(88, 136);
-            this.textBox8.Name = "textBox8";
-            this.textBox8.Size = new System.Drawing.Size(237, 20);
-            this.textBox8.TabIndex = 15;
+            this.LogfilePathTextbox.Location = new System.Drawing.Point(88, 136);
+            this.LogfilePathTextbox.Name = "LogfilePathTextbox";
+            this.LogfilePathTextbox.Size = new System.Drawing.Size(237, 20);
+            this.LogfilePathTextbox.TabIndex = 15;
             // 
             // label7
             // 
@@ -204,41 +204,41 @@
             this.label9.TabIndex = 18;
             this.label9.Text = "Min. Bitrate";
             // 
-            // textBox9
+            // BitrateTextBox
             // 
-            this.textBox9.Location = new System.Drawing.Point(397, 110);
-            this.textBox9.Name = "textBox9";
-            this.textBox9.Size = new System.Drawing.Size(100, 20);
-            this.textBox9.TabIndex = 19;
+            this.BitrateTextBox.Location = new System.Drawing.Point(397, 110);
+            this.BitrateTextBox.Name = "BitrateTextBox";
+            this.BitrateTextBox.Size = new System.Drawing.Size(100, 20);
+            this.BitrateTextBox.TabIndex = 19;
             // 
             // Mainform
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(613, 460);
-            this.Controls.Add(this.textBox9);
+            this.Controls.Add(this.BitrateTextBox);
             this.Controls.Add(this.label9);
             this.Controls.Add(this.label8);
             this.Controls.Add(this.label7);
-            this.Controls.Add(this.textBox8);
-            this.Controls.Add(this.textBox7);
+            this.Controls.Add(this.LogfilePathTextbox);
+            this.Controls.Add(this.PlaylistPathTextbox);
             this.Controls.Add(this.label6);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
-            this.Controls.Add(this.textBox6);
-            this.Controls.Add(this.textBox5);
-            this.Controls.Add(this.textBox4);
-            this.Controls.Add(this.textBox3);
-            this.Controls.Add(this.textBox2);
-            this.Controls.Add(this.checkBox1);
-            this.Controls.Add(this.dataGridView1);
+            this.Controls.Add(this.MaxThresholdHeightTextBox);
+            this.Controls.Add(this.MaxFilesizeTextBox);
+            this.Controls.Add(this.MaxThresholdWidthTextBox);
+            this.Controls.Add(this.ThresholdHeightTextBox);
+            this.Controls.Add(this.ThresholdWidthTextBox);
+            this.Controls.Add(this.WithRatio);
+            this.Controls.Add(this.ResultDataGridView);
             this.Controls.Add(this.InputTextBox);
             this.Name = "Mainform";
             this.Text = "Mainform";
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.ResultDataGridView)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -247,24 +247,24 @@
         #endregion
 
         private System.Windows.Forms.TextBox InputTextBox;
-        private System.Windows.Forms.DataGridView dataGridView1;
-        private System.Windows.Forms.CheckBox checkBox1;
-        private System.Windows.Forms.TextBox textBox2;
-        private System.Windows.Forms.TextBox textBox3;
-        private System.Windows.Forms.TextBox textBox4;
-        private System.Windows.Forms.TextBox textBox5;
-        private System.Windows.Forms.TextBox textBox6;
+        private System.Windows.Forms.DataGridView ResultDataGridView;
+        private System.Windows.Forms.CheckBox WithRatio;
+        private System.Windows.Forms.TextBox ThresholdWidthTextBox;
+        private System.Windows.Forms.TextBox ThresholdHeightTextBox;
+        private System.Windows.Forms.TextBox MaxThresholdWidthTextBox;
+        private System.Windows.Forms.TextBox MaxFilesizeTextBox;
+        private System.Windows.Forms.TextBox MaxThresholdHeightTextBox;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Label label6;
-        private System.Windows.Forms.TextBox textBox7;
-        private System.Windows.Forms.TextBox textBox8;
+        private System.Windows.Forms.TextBox PlaylistPathTextbox;
+        private System.Windows.Forms.TextBox LogfilePathTextbox;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.Label label9;
-        private System.Windows.Forms.TextBox textBox9;
+        private System.Windows.Forms.TextBox BitrateTextBox;
     }
 }

@@ -17,14 +17,15 @@ namespace ArtSizeReader {
             AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionTrapper;
             AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(CurrentDomain_AssemblyResolve);
 
+            // CMD Version
             if (ParseOptions(args)) {
                 Console.WriteLine("\nFinished!");
             }
+            // WinForms Version
             else {
-                Application.Run(new Mainform());
-
-                // Wait for user input/keep cmd window open.
-                //// Console.ReadLine();
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+                Application.Run(new Mainform());                
             }
 #if DEBUG
             // Wait for user input/keep cmd window open.

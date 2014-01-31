@@ -11,6 +11,10 @@ namespace ArtSizeReader {
     public partial class Mainform : Form {
         public Mainform() {
             InitializeComponent();
+
+            foreach (Control c in Controls) {
+                c.Font = SystemFonts.DefaultFont;
+            }
         }
     }
 }
