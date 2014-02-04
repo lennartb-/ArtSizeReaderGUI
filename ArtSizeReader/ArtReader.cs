@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 
@@ -12,37 +10,40 @@ namespace ArtSizeReader {
 
         // Preserve standard Console output
         private static readonly StreamWriter DefaultConsoleOutput = new StreamWriter(Console.OpenStandardOutput());
-        private StreamWriter logfileWriter = DefaultConsoleOutput;
-
-        // Optional parameter bools
-        private bool hasMaxThreshold = false;
-        private bool hasRatio = false;
-        private bool hasSizeLimit = false;
-        private bool hasThreshold = false;
-        private bool withLogfile = false;
-        private bool withPlaylist = false;
 
         // Used for progress bar
         private int analyzedNumberOfFiles;
-        private int numberOfFiles;
 
-        // Required parameter values
-        private double? size;
-        private string targetPath;
-        private string threshold;
+        private bool fromGui;
+
+        // Optional parameter bools
+        private bool hasMaxThreshold = false;
+
+        private bool hasRatio = false;
+        private bool hasSizeLimit = false;
+        private bool hasThreshold = false;
 
         // Optional parameter values
         private string logfilePath;
+
+        private StreamWriter logfileWriter = DefaultConsoleOutput;
+        private uint[] maxResolution;
         private string maxThreshold;
-        private string playlistPath;
+        private int numberOfFiles;
 
         // Input values converted to other datatypes:
         private Playlist playlist;
-        private uint[] maxResolution;
+
+        private string playlistPath;
         private uint[] resolution;
 
-        private bool fromGui;
-        
+        // Required parameter values
+        private double? size;
+
+        private string targetPath;
+        private string threshold;
+        private bool withLogfile = false;
+        private bool withPlaylist = false;
 
         /// <summary>
         /// Builds an ArtReader object from the specified parameters and checks if they are valid.
@@ -91,7 +92,7 @@ namespace ArtSizeReader {
         /// Starts fetching the album art from the specified file or directory.
         /// </summary>
         /// <returns>True if analysing succeeded, false if the file or path could not be found.</returns>
-        public bool GetAlbumArt() {            
+        public bool GetAlbumArt() {
             // Target is a single file
             if (File.Exists(targetPath)) {
                 AnalyzeFile(targetPath);
@@ -101,7 +102,7 @@ namespace ArtSizeReader {
             // Target is a directory
             else if (Directory.Exists(targetPath)) {
                 // Search for files in the directory, but filter out inaccessible folders before.
-                
+
                 var accessibleDirectories = SafeFileEnumerator.EnumerateDirectories(targetPath, "*.*", SearchOption.AllDirectories);
                 IEnumerable<string> temp = new string[] { targetPath };
                 accessibleDirectories = accessibleDirectories.Concat(temp);
@@ -214,62 +215,55 @@ namespace ArtSizeReader {
         /// Analyzes a file for album art and handles checking of the size.
         /// </summary>
         /// <param name="file">The file to check.</param>
-        private void AnalyzeFile(string file) {
+        private ResultSet AnalyzeFile(string file) {
             TagLib.File tag = TagLib.File.Create(file);
-            
-           
-            string message = string.Empty;
+            ResultSet results = new ResultSet(file);
 
             // Reader tags from file and get the content of the cover tag
             try {
-////                tags.Read(file);
+                ////                tags.Read(file);
             }
             catch (Exception e) {
-                Console.WriteLine("Unable to read file tags for: " + file+ ", ID3 tags might be corrupt.");
-                Console.WriteLine("Exception: "+e.Message + "(" +e.GetType()+")");
-                return;
-            }            
+                Console.WriteLine("Unable to read file tags for: " + file + ", ID3 tags might be corrupt.");
+                Console.WriteLine("Exception: " + e.Message + "(" + e.GetType() + ")");
+                results.AddError("Unable to read file tags: " + e.Message + "(" + e.GetType() + ")");
+                return results;
+            }
 
             // Check if there actually is a cover.
-            if (tag.Tag.Pictures.Length > 0) {               
-                    
-              MemoryStream ms = new MemoryStream(tag.Tag.Pictures[0].Data.Data);
-               System.Drawing.Image image = System.Drawing.Image.FromStream(ms);
-                
+            if (tag.Tag.Pictures.Length > 0) {
+                MemoryStream ms = new MemoryStream(tag.Tag.Pictures[0].Data.Data);
+                System.Drawing.Image image = System.Drawing.Image.FromStream(ms);
 
                 if (hasSizeLimit) {
                     try {
                         double imagesize = GetImageSize(image);
-                    
                         if (imagesize > this.size) {
-                            message += "Artwork filesize is " + imagesize + " kB. ";
+                            results.AddFileSize(imagesize.ToString());
                         }
                     }
                     catch (Exception e) {
-                        message += string.Format("Could not get image size from file {0}, Reason: {1} ({2})", file, e.Message, e.GetType().Name);                        
+                        results.AddError(string.Format("Could not get image size, Reason: {0} ({1})", e.Message, e.GetType().Name));
                     }
                 }
-
+                // TODO
                 if (!IsWellFormedImage(image)) {
-                    message += "Artwork image size is " + image.Size.Width + "x" + image.Size.Height;
+                    results.AddResolution(image.Size.Width + "x" + image.Size.Height);
                 }
             }
 
             // No covers found.
             else {
-                message += "No cover found.";
+                results.AddError("No cover found.");
             }
 
             // If one of the checks failed, write it to console.
-            if (!message.Equals(string.Empty)) {
+            /*if (!message.Equals(string.Empty)) {
                 if (!withLogfile) Console.Write("\r");
                 Console.WriteLine(file + ": " + message);
-                if (withPlaylist) playlist.Write(file);
-            }
-        }
-
-        private void HandleResults() {
-
+            }*/
+            if (withPlaylist && (results.Results.Count > 0)) playlist.Write(file);
+            return results;
         }
 
         /// <summary>
@@ -278,7 +272,7 @@ namespace ArtSizeReader {
         /// <param name="dirs">The enumerated directories.</param>
         /// <returns>The number of MP3 files in the directories.</returns>
         private int CountFiles(IEnumerable<string> dirs) {
-            int num = 0;    
+            int num = 0;
             foreach (string dir in dirs) {
                 num += SafeFileEnumerator.EnumerateFiles(dir, "*.mp3", SearchOption.TopDirectoryOnly).Count();
             }
@@ -295,16 +289,14 @@ namespace ArtSizeReader {
             try {
                 using (var ms = new MemoryStream()) {
                     image.Save(ms, image.RawFormat);
-                    // Convert to kB.                    
+                    // Convert to kB.
                     return (double)(ms.Length >> 10);
                 }
             }
             catch (Exception) {
                 throw;
             }
-
         }
-        
 
         /// <summary>
         /// Manages the initialisation of the logfile.
@@ -367,8 +359,8 @@ namespace ArtSizeReader {
         private IEnumerable<string> ReadFiles(string directory) {
             IEnumerable<string> musicFiles;
 
-            // Get all files in the directory.            
-            musicFiles = SafeFileEnumerator.EnumerateFiles(directory, "*.mp3",SearchOption.TopDirectoryOnly);
+            // Get all files in the directory.
+            musicFiles = SafeFileEnumerator.EnumerateFiles(directory, "*.mp3", SearchOption.TopDirectoryOnly);
 
             foreach (string currentFile in musicFiles) {
                 // If logging to file is enabled, print out the progress to console anyway.
